@@ -11,7 +11,7 @@ import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 
 class HDFilmSitesi : MainAPI() {
     override var mainUrl              = "https://hdfilmsitesi.net"
-    override var name                 = "FullHDFilm"
+    override var name                 = "HDFilmSitesi"
     override val hasMainPage          = true
     override var lang                 = "tr"
     override val hasQuickSearch       = false
@@ -59,30 +59,31 @@ class HDFilmSitesi : MainAPI() {
         val actors      = document.select("a.cast").map { Actor(it.text(), it.attr("href")) }
         val trailer     = fixUrlNull(document.selectFirst("[property='og:video']")?.attr("content"))
 
-        if (url.contains("-dizi") || tags.any { it.lowercase().contains("dizi") }) {
+        if (document.selectFirst("div.part_buton_sec")?.text()?.contains("Sezon") == true) {
             val episodes = mutableListOf<Episode>()
 
             val iframeSkici = IframeKodlayici()
 
-            val partNumbers  = document.select("li.psec").map { it.attr("id") }
-            val partNames    = document.select("li.psec a").map { it.text()?.trim() }
             val pdataMatches = Regex("""pdata\[\'(.*?)'\] = \'(.*?)\';""").findAll(document.html())
             val pdataList    = pdataMatches.map { it.destructured }.toList()
 
-            partNumbers.forEachIndexed { index, partNumber ->
-                val partName = partNames.getOrNull(index)
-                val pdata    = pdataList.getOrNull(index)
-                
-                val key   = pdata?.component1()
-                val value = pdata?.component2()
-
-                if (partName!!.lowercase().contains("fragman") || partNumber!!.lowercase().contains("fragman")) return@forEachIndexed
+            for (pdata in pdataList) {
+                val key = pdata.component1();
+                val value = pdata.component2();
 
                 val iframeData = iframeSkici.iframeCoz(value!!)
                 val iframeLink = app.get(iframeData, referer="${mainUrl}/").url.toString()
 
-                val sz_num = partNumber.takeIf { it.contains("sezon") }?.substringBefore("sezon")?.toIntOrNull() ?: 1
-                val ep_num = partName.substringBefore(".")?.trim()?.toIntOrNull() ?: 1
+                //val sz_num = partNumber.takeIf { it.contains("sezon") }?.substringBefore("sezon")?.toIntOrNull() ?: 1
+                //val ep_num = partName.substringBefore(".")?.trim()?.toIntOrNull() ?: 1
+
+                val sz_num = key.substringAfter("prt_").substringBefore("sezon").toIntOrNull() ?: 1
+                var ep_num = key.substringAfter("sezon").toIntOrNull()
+                if (ep_num != null) {
+                    ep_num += 1
+                } else {
+                    ep_num = 1
+                }
 
                 episodes.add(Episode(
                     data    = iframeLink,
@@ -91,7 +92,6 @@ class HDFilmSitesi : MainAPI() {
                     episode = ep_num
                 ))
             }
-
 
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodes) {
                 this.posterUrl = poster
@@ -130,34 +130,21 @@ class HDFilmSitesi : MainAPI() {
 
         val iframeSkici = IframeKodlayici()
 
-        val partNumbers  = document.select("li.psec").map { it.attr("id") }
-        val partNames    = document.select("li.psec a").map { it.text()?.trim() }
         val pdataMatches = Regex("""pdata\[\'(.*?)'\] = \'(.*?)\';""").findAll(document.html())
         val pdataList    = pdataMatches.map { it.destructured }.toList()
 
-        partNumbers.forEachIndexed { index, partNumber ->
-            val partName = partNames.getOrNull(index)
-            val pdata    = pdataList.getOrNull(index)
-            
-            val key   = pdata?.component1()
-            val value = pdata?.component2()
-
-            if (partName!!.lowercase().contains("fragman") || partNumber!!.lowercase().contains("fragman")) return@forEachIndexed
-
-            Log.d("FHDF", "partNumber » ${partNumber}") // ! fragman0
-            Log.d("FHDF", "partName   » ${partName}")   // ! Fragman
-            Log.d("FHDF", "key        » ${key}")        // ! prt_fragman0
-            // Log.d("FHDF", "value      » ${value}")      // ! Şifreli veri
-
+        for (pdata in pdataList) {
+            val key   = pdata.component1()
+            val value = pdata.component2()
             val iframeData = iframeSkici.iframeCoz(value!!)
             val iframeLink = app.get(iframeData, referer="${mainUrl}/").url.toString()
-            Log.d("FHDF", "iframeLink » ${iframeLink}")
+            Log.d("HDFS", "iframeLink » ${iframeLink}")
 
             loadExtractor(iframeLink, "${mainUrl}/", subtitleCallback) { extractor ->
                 callback.invoke (
                     ExtractorLink (
-                        source  = "${partName} - ${extractor.source}",
-                        name    = "${partName} - ${extractor.name}",
+                        source  = "${key} - ${extractor.source}",
+                        name    = "${key} - ${extractor.name}",
                         url     = extractor.url,
                         referer = extractor.referer,
                         quality = extractor.quality,
