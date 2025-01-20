@@ -77,7 +77,7 @@ class HDFilmSitesi : MainAPI() {
         val document = app.get(url).document
 
         val title =
-            document.selectFirst("h1 span")?.text()?.substringBefore(" İzle")?.trim() ?: return null
+            document.selectFirst("h1 span")?.text()?.substringBefore(" izle")?.trim() ?: return null
         val poster = fixUrlNull(document.selectFirst("[property='og:image']")?.attr("content"))
         val description =
             document.selectFirst("div[itemprop='description']")?.text()?.substringAfter("⭐")
@@ -160,33 +160,21 @@ class HDFilmSitesi : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        Log.d("HDFS", "data » ${data}")
         if (data.contains("vidmody")) {
-            Log.d("HDFS", "Vidmody var")
             val aa = app.get(data, referer = "${mainUrl}/").document
             val bb = aa.body().selectFirst("script").toString()
                 .substringAfter("var id =").substringBefore(";")
                 .replace("'", "").trim()
-            Log.d("HDFS", aa.body().selectFirst("script").toString())
-            Log.d(
-                "HDFS", aa.body().selectFirst("script").toString()
-                    .substringAfter("var id =").substringBefore(";")
-                    .replace("'", "").trim()
-            )
             val m3uLink = "https://vidmody.com/vs/$bb"
-            Log.d("HDFS", m3uLink)
             val m3uicerik = app.get(m3uLink, referer = mainUrl).text
-
             val audioRegex = Regex(
                 "#EXT-X-MEDIA:TYPE=AUDIO,.*NAME=\"(.*?)\".*URI=\"(.*?)\"",
                 RegexOption.MULTILINE
             )
             val audioMatches = audioRegex.findAll(m3uicerik)
-            println("--- AUDIO ---")
             audioMatches.forEach { matchResult ->
                 val name = matchResult.groupValues[1]
                 val uri = matchResult.groupValues[2]
-                println("Name: $name, URI: $uri")
             }
             // SUBTITLES verilerini al
             val subtitlesRegex = Regex(
@@ -194,7 +182,6 @@ class HDFilmSitesi : MainAPI() {
                 RegexOption.MULTILINE
             )
             val subtitlesMatches = subtitlesRegex.findAll(m3uicerik)
-            println("\n--- SUBTITLES ---")
             subtitlesMatches.forEach { matchResult ->
                 val name = matchResult.groupValues[1]
                 val uri = matchResult.groupValues[2]
@@ -212,8 +199,6 @@ class HDFilmSitesi : MainAPI() {
                 RegexOption.MULTILINE
             )
             val streamMatches = streamRegex.findAll(m3uicerik)
-            println("\n--- STREAM ---")
-
             streamMatches.forEachIndexed { index, matchResult ->
                 val resolution = matchResult.groupValues[1]
                 val uri = matchResult.groupValues[2]
@@ -275,40 +260,23 @@ class HDFilmSitesi : MainAPI() {
         for (pdata in pdataList) {
             val key = pdata.component1()
             val value = pdata.component2()
-            Log.d("HDFS", "Key: $key")
-            Log.d("HDFS", "Value: $value")
             val iframeData = iframeSkici.iframeCoz(value!!)
             val iframeLink = app.get(iframeData, referer = "${mainUrl}/").url.toString()
-            Log.d("HDFS", "iframeLink » ${iframeLink}")
             if (iframeLink.contains("vidmody")) {
-                Log.d("HDFS", "Vidmody var")
                 val aa = app.get(iframeLink, referer = "${mainUrl}/").document
-                Log.d("HDFS", aa.toString())
-                Log.d("HDFS", aa.body().toString())
-                Log.d("HDFS", aa.body().selectFirst("script").toString())
                 val bb = aa.body().selectFirst("script").toString()
                     .substringAfter("var id =").substringBefore(";")
                     .replace("'", "").trim()
-                Log.d("HDFS", aa.body().selectFirst("script").toString())
-                Log.d(
-                    "HDFS", aa.body().selectFirst("script").toString()
-                        .substringAfter("var id =").substringBefore(";")
-                        .replace("'", "").trim()
-                )
                 val m3uLink = "https://vidmody.com/vs/$bb"
-                Log.d("HDFS", m3uLink)
                 val m3uicerik = app.get(m3uLink, referer = mainUrl).text
-                println(m3uicerik)
                 val audioRegex = Regex(
                     "#EXT-X-MEDIA:TYPE=AUDIO,.*NAME=\"(.*?)\".*URI=\"(.*?)\"",
                     RegexOption.MULTILINE
                 )
                 val audioMatches = audioRegex.findAll(m3uicerik)
-                println("--- AUDIO ---")
                 audioMatches.forEach { matchResult ->
                     val name = matchResult.groupValues[1]
                     val uri = matchResult.groupValues[2]
-                    println("Name: $name, URI: $uri")
                 }
                 // SUBTITLES verilerini al
                 val subtitlesRegex = Regex(
@@ -316,11 +284,9 @@ class HDFilmSitesi : MainAPI() {
                     RegexOption.MULTILINE
                 )
                 val subtitlesMatches = subtitlesRegex.findAll(m3uicerik)
-                println("\n--- SUBTITLES ---")
                 subtitlesMatches.forEach { matchResult ->
                     val name = matchResult.groupValues[1]
                     val uri = matchResult.groupValues[2]
-                    println("Subtitle: $name +  $uri")
                     subtitleCallback.invoke(
                         SubtitleFile(
                             lang = name,
@@ -335,7 +301,6 @@ class HDFilmSitesi : MainAPI() {
                     RegexOption.MULTILINE
                 )
                 val streamMatches = streamRegex.findAll(m3uicerik)
-                println("\n--- STREAM ---")
                 streamMatches.forEachIndexed { index, matchResult ->
                     val resolution = matchResult.groupValues[1]
                     val uri = matchResult.groupValues[2]
