@@ -208,7 +208,7 @@ class HDFilmSitesi : MainAPI() {
                 callback.invoke(
                     ExtractorLink(
                         source = this.name,
-                        name = "$resolution - " + (audioList[index].groupValues.getOrNull(1) ?: ""),
+                        name = "$resolution - " + (audioList[0].groupValues.getOrNull(1) ?: ""),
                         url = uri,
                         referer = uri,
                         quality = getQualityFromName("4k"),
@@ -218,7 +218,7 @@ class HDFilmSitesi : MainAPI() {
                 callback.invoke(
                     ExtractorLink(
                         source = this.name,
-                        name = resolution + (audioList[index].groupValues.getOrNull(1) ?: ""),
+                        name = resolution + (audioList[1].groupValues.getOrNull(1) ?: ""),
                         url = uriv2,
                         referer = uriv2,
                         quality = getQualityFromName("4k"),
@@ -302,12 +302,11 @@ class HDFilmSitesi : MainAPI() {
                     val resolution = matchResult.groupValues[1]
                     val uri = matchResult.groupValues[2]
                     val uriv2 = matchResult.groupValues[2].replace("a1.gif", "a2.gif")
-                    
-                    Log.d("HDFS", (audioList[index].groupValues.getOrNull(1) ?: ""))
+
                     callback.invoke(
                         ExtractorLink(
                             source = this.name,
-                            name = "$resolution - " + (audioList[index].groupValues.getOrNull(1) ?: ""),
+                            name = "$resolution - " + (audioList[0].groupValues.getOrNull(1) ?: ""),
                             url = uri,
                             referer = uri,
                             quality = getQualityFromName("4k"),
@@ -317,7 +316,7 @@ class HDFilmSitesi : MainAPI() {
                     callback.invoke(
                         ExtractorLink(
                             source = this.name,
-                            name = "$resolution - " + (audioList[index].groupValues.getOrNull(1) ?: ""),
+                            name = "$resolution - " + (audioList[1].groupValues.getOrNull(1) ?: ""),
                             url = uriv2,
                             referer = uriv2,
                             quality = getQualityFromName("4k"),
