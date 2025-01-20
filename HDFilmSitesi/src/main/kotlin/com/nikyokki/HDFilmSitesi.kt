@@ -44,10 +44,10 @@ class HDFilmSitesi : MainAPI() {
         "${mainUrl}/filmizle/aksiyon-filmleri-izle"     to "Aksiyon",
         "${mainUrl}/filmizle/belgesel-filmleri-izle"    to "Belgesel",
         "${mainUrl}/filmizle/dram-filmleri-izle"        to "Dram",
-        "${mainUrl}/filmizle/fantastik-filmleri-izle"   to "Fantastik",
+        "${mainUrl}/filmizle/fantastik-filmler-izle"    to "Fantastik",
         "${mainUrl}/filmizle/komedi-filmleri-hd-izle"   to "Komedi",
         "${mainUrl}/filmizle/korku-filmleri-izle"       to "Korku",
-        "${mainUrl}/filmizle/romantik-filmleri-hd-izle" to "Romantik",
+        "${mainUrl}/filmizle/romantik-filmler-hd-izle"  to "Romantik",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
