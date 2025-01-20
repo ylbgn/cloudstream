@@ -3,6 +3,7 @@
 package com.nikyokki
 
 import android.util.Log
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
@@ -24,6 +25,7 @@ import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.getQualityFromName
 import org.jsoup.nodes.Element
 
@@ -243,6 +245,22 @@ class HDFilmSitesi : MainAPI() {
                     )
                 )
             }
+        } else if (data.contains("vidlop")) {
+            val vidUrl = app.post(
+                "https://vidlop.com/player/index.php?data=" + data.split("/").last() + "&do=getVideo",
+                headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
+                referer = "${mainUrl}/"
+            ).parsedSafe<VidLop>()?.securedLink ?: return false
+            callback.invoke(
+                ExtractorLink(
+                    source  = this.name,
+                    name    = this.name,
+                    url     = vidUrl,
+                    referer = data,
+                    quality = Qualities.Unknown.value,
+                    isM3u8  = true
+                )
+            )
         }
         /*if (!data.contains(mainUrl)) {
             loadExtractor(data, "${mainUrl}/", subtitleCallback, callback)
@@ -349,9 +367,29 @@ class HDFilmSitesi : MainAPI() {
                         )
                     )
                 }
-
+            } else if (iframeLink.contains("vidlop")) {
+                val vidUrl = app.post(
+                    "https://vidlop.com/player/index.php?data=" + data.split("/").last() + "&do=getVideo",
+                    headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
+                    referer = "${mainUrl}/"
+                ).parsedSafe<VidLop>()?.securedLink ?: return false
+                callback.invoke(
+                    ExtractorLink(
+                        source  = this.name,
+                        name    = this.name,
+                        url     = vidUrl,
+                        referer = data,
+                        quality = Qualities.Unknown.value,
+                        isM3u8  = true
+                    )
+                )
             }
         }
         return true
     }
+
+    data class VidLop(
+        @JsonProperty("hls")         val hls: Boolean?        = null,
+        @JsonProperty("securedLink") val securedLink: String? = null
+    )
 }
