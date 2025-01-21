@@ -183,11 +183,12 @@ class DiziMag : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val mainReq = app.get(url)
         val document = mainReq.document
+        Log.d("DMG", "document -> $document")
         val ci_session = mainReq.cookies["ci_session"].toString()
         if (url.contains("/dizi/")) {
             val title = document.selectFirst("div.page-title h1")?.selectFirst("a")?.text() ?: return null
             val poster = fixUrlNull(document.selectFirst("div.series-profile-image img")?.attr("src"))
-            val year = document.select("li.w-auto.sm:w-1/5").last()?.select("p")?.text()?.toIntOrNull()
+            //val year = document.select("li.w-auto.sm:w-1/5").last()?.select("p")?.text()?.toIntOrNull()
             val description = document.selectFirst("div.series-profile-summary p")?.text()?.trim()
             val tags = document.selectFirst("div.series-profile-type")?.select("a")?.mapNotNull { it.text().trim() }
             var rating = 0
@@ -234,7 +235,6 @@ class DiziMag : MainAPI() {
 
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodeses) {
                 this.posterUrl = poster
-                this.year = year
                 this.plot = description
                 this.tags = tags
                 this.rating = rating
