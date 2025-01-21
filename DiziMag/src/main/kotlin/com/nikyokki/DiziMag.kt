@@ -188,12 +188,12 @@ class DiziMag : MainAPI() {
         if (url.contains("/dizi/")) {
             val title = document.selectFirst("div.page-title h1")?.selectFirst("a")?.text() ?: return null
             val poster = fixUrlNull(document.selectFirst("div.series-profile-image img")?.attr("src"))
-            //val year = document.select("li.w-auto.sm:w-1/5").last()?.select("p")?.text()?.toIntOrNull()
+            val year = document.select("li.w-auto.sm").last()?.select("p")?.text()?.toIntOrNull()
             val description = document.selectFirst("div.series-profile-summary p")?.text()?.trim()
             val tags = document.selectFirst("div.series-profile-type")?.select("a")?.mapNotNull { it.text().trim() }
             var rating = 0
 
-            document.select("div.w-auto.sm:w-1/5").forEach { it ->
+            document.select("div.w-auto.sm").forEach { it ->
                     if (it.selectFirst("span")?.text()?.contains("Puan") == true){
                         rating = it.select("span.color-imdb").text().toRatingInt()!!
                     }
@@ -235,6 +235,7 @@ class DiziMag : MainAPI() {
 
             return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodeses) {
                 this.posterUrl = poster
+                this.year = year
                 this.plot = description
                 this.tags = tags
                 this.rating = rating
