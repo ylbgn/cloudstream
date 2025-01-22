@@ -6,10 +6,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: 35 */1 * * *
+on: [push]
 
 jobs:
   DomainKontrol:
