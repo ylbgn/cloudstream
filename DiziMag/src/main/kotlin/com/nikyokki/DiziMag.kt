@@ -340,7 +340,7 @@ class DiziMag : MainAPI() {
                     val jsonData = ObjectMapper().readValue(decrypt, JsonData::class.java)
                     Log.d("DMG", "jsonData » $jsonData")
 
-                    val m3u8Content = app.get(jsonData.videoLocation, referer = iframe, headers = mapOf("Accept" to "*/*", "Referer" to iframe)).document
+                    val m3u8Content = app.get(jsonData.videoLocation, referer = iframe, headers = mapOf("Accept" to "*/*", "Referer" to iframe)).document.body()
                     val regex = Regex("#EXT-X-STREAM-INF:.*?\\n(https?://\\S+)")
                     Log.d("DMG", m3u8Content.toString())
                     val matchResult = regex.find(m3u8Content.toString())
