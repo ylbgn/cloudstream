@@ -341,8 +341,7 @@ class DiziMag : MainAPI() {
                     Log.d("DMG", "jsonData » $jsonData")
 
                     val m3u8Content = app.get(jsonData.videoLocation, referer = iframe, headers = mapOf("Accept" to "*/*", "Referer" to iframe)).document.body()
-                    val regex = Regex("#EXT-X-STREAM-INF:.*?\\n(https?://\\S+)")
-                    Log.d("DMG", m3u8Content.text())
+                    val regex = Regex("#EXT-X-STREAM-INF:.*? (https?://\\S+)")
                     val matchResult = regex.find(m3u8Content.text())
                     val m3uUrl = matchResult?.groupValues?.get(1) ?: ""
                     Log.d("DMG", m3uUrl)
