@@ -319,7 +319,7 @@ class DiziMag : MainAPI() {
             if (sc.toString().contains("bePlayer")) {
                 Log.d("DMG", "bePlayer var")
                 val pattern = Pattern.compile("bePlayer\\('(.*?)', '(.*?)'\\)")
-                val matcher = pattern.matcher(sc.text().trimIndent())
+                val matcher = pattern.matcher(sc.toString().trimIndent())
                 if (matcher.find()) {
                     val key = matcher.group(1)
                     val jsonCipher = matcher.group(2)
