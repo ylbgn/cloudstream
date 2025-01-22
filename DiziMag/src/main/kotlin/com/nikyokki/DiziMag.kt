@@ -2,6 +2,7 @@
 
 package com.nikyokki
 
+import CryptoJS
 import android.util.Log
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.lagradost.cloudstream3.Actor
@@ -91,9 +92,13 @@ class DiziMag : MainAPI() {
     }
 
     private fun Element.diziler(): SearchResponse? {
-        val title = this.selectFirst("div.filter-result-box-subject-top-left h2")?.text() ?: return null
-        val href = fixUrlNull(this.selectFirst("div.filter-result-box-subject-top-left a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("div.filter-result-box-image img")?.attr("data-src"))
+        val title =
+            this.selectFirst("div.filter-result-box-subject-top-left h2")?.text() ?: return null
+        val href =
+            fixUrlNull(this.selectFirst("div.filter-result-box-subject-top-left a")?.attr("href"))
+                ?: return null
+        val posterUrl =
+            fixUrlNull(this.selectFirst("div.filter-result-box-image img")?.attr("data-src"))
 
         return if (href.contains("/dizi/")) {
             newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
@@ -186,18 +191,24 @@ class DiziMag : MainAPI() {
         val document = mainReq.document
 
         if (url.contains("/dizi/")) {
-            val title = document.selectFirst("div.page-title h1")?.selectFirst("a")?.text() ?: return null
-            val poster = fixUrlNull(document.selectFirst("div.series-profile-image img")?.attr("src"))
-            val year = document.select("li.w-auto.sm").last()?.select("p")?.text()?.toIntOrNull()
+            val title =
+                document.selectFirst("div.page-title h1")?.selectFirst("a")?.text() ?: return null
+            val poster =
+                fixUrlNull(document.selectFirst("div.series-profile-image img")?.attr("src"))
+            var year = document.select("li.w-auto.sm").last()?.select("p")?.text()?.toIntOrNull()
             val description = document.selectFirst("div.series-profile-summary p")?.text()?.trim()
-            val tags = document.selectFirst("div.series-profile-type")?.select("a")?.mapNotNull { it.text().trim() }
+            val tags = document.selectFirst("div.series-profile-type")?.select("a")
+                ?.mapNotNull { it.text().trim() }
             var rating = 0
 
-            document.select("div.w-auto.sm").forEach { it ->
-                    if (it.selectFirst("span")?.text()?.contains("Puan") == true){
-                        rating = it.select("span.color-imdb").text().toRatingInt()!!
-                    }
+            document.select("filter-result-box-bottom li").forEach { it ->
+                if (it.selectFirst("span")?.text()?.contains("Puan") == true) {
+                    rating = it.select("span.color-imdb").text().toRatingInt()!!
                 }
+                if (it.selectFirst("span")?.text()?.contains("Yapım yılı") == true) {
+                    year = it.selectFirst("p")?.text()?.toIntOrNull()
+                }
+            }
             val actors = mutableListOf<Actor>()
             document.select("div.series-profile-cast li").forEach { it ->
                 val img = fixUrlNull(it.selectFirst("img")?.attr("data-src"))
@@ -212,14 +223,14 @@ class DiziMag : MainAPI() {
                 var blm = 1
                 for (bolum in sezon.select("li")) {
                     val epName = bolum.selectFirst("h6.truncate a")?.text() ?: continue
-                    Log.d("DMG","epName: $epName")
+                    Log.d("DMG", "epName: $epName")
                     val epHref = fixUrlNull(bolum.select("h6.truncate a").attr("href")) ?: continue
-                    Log.d("DMG","epHref: $epHref")
+                    Log.d("DMG", "epHref: $epHref")
                     val epEpisode = blm++
-                    Log.d("DMG","epEpisode: $epEpisode")
+                    Log.d("DMG", "epEpisode: $epEpisode")
                     //val epSeason  = bolum.selectFirst("div.seasons-menu")?.text()?.substringBefore(".Sezon")?.trim()?.toIntOrNull()
                     val epSeason = szn
-                    Log.d("DMG","epSeason: $epSeason")
+                    Log.d("DMG", "epSeason: $epSeason")
 
                     episodeses.add(
                         Episode(
@@ -245,29 +256,34 @@ class DiziMag : MainAPI() {
         } else {
             var yil: Int? = null;
             val title = document.selectFirst("div.poster.hidden h2")?.text() ?: return null
-            val poster = fixUrlNull(document.selectFirst("div.flex.items-start.gap-4.slider-top img")?.attr("src"))
+            val poster = fixUrlNull(
+                document.selectFirst("div.flex.items-start.gap-4.slider-top img")?.attr("src")
+            )
             val description = document.selectFirst("div.mt-2.text-md")?.text()?.trim()
             document.select("div.flex.items-center").forEach { item ->
                 if (item.selectFirst("span")?.text()?.contains("tarih") == true) {
-                   yil  = item.selectFirst("div.w-fit.rounded-lg")?.text()?.toIntOrNull()
+                    yil = item.selectFirst("div.w-fit.rounded-lg")?.text()?.toIntOrNull()
                 }
             }
-            val tags = document.select("div.text-white.text-md.opacity-90.flex.items-center.gap-2.overflow-auto.mt-1 a").map { it.text() }
+            val tags =
+                document.select("div.text-white.text-md.opacity-90.flex.items-center.gap-2.overflow-auto.mt-1 a")
+                    .map { it.text() }
             val rating =
-                document.selectFirst("div.flex.items-center")?.selectFirst("span.text-white.text-sm")
+                document.selectFirst("div.flex.items-center")
+                    ?.selectFirst("span.text-white.text-sm")
                     ?.text()?.trim().toRatingInt()
             val actors = mutableListOf<Actor>()
-            document.select("div.w-fit.min-w-fit.rounded-lg") .forEach { a ->
+            document.select("div.w-fit.min-w-fit.rounded-lg").forEach { a ->
                 if (a.selectFirst("span")?.text()?.contains("Aktör") == true) {
                     actors.add(Actor(a.selectFirst("a")?.text()!!))
                 }
             }
             return newMovieLoadResponse(title, url, TvType.Movie, url) {
-                this.posterUrl       = poster
-                this.year            = yil
-                this.plot            = description
-                this.rating          = rating
-                this.tags            = tags
+                this.posterUrl = poster
+                this.year = yil
+                this.plot = description
+                this.rating = rating
+                this.tags = tags
                 addActors(actors)
             }
         }
@@ -281,19 +297,22 @@ class DiziMag : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         Log.d("DMG", "data » ${data}")
-        val headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
-            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+        val headers = mapOf(
+            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+        )
         var aa = app.get(mainUrl)
         val ci_session = aa.cookies["ci_session"].toString()
-        val document = app.get(data, headers = headers, cookies = mapOf(
-            "ci_session" to ci_session
-        )).document
-        Log.d("DMG", document.toString())
+        val document = app.get(
+            data, headers = headers, cookies = mapOf(
+                "ci_session" to ci_session
+            )
+        ).document
         var iframe =
-            fixUrlNull(document.selectFirst("div.tv-spoox2 iframe")?.attr("src")) ?: return false
+            fixUrlNull(document.selectFirst("div#tv-spoox2 iframe")?.attr("src")) ?: return false
         Log.d("DMG", "iframe » ${iframe}")
 
-        val docum  = app.get(iframe, headers = headers, referer = "$mainUrl/").document
+        val docum = app.get(iframe, headers = headers, referer = "$mainUrl/").document
         docum.select("script").forEach { sc ->
             if (sc.text().contains("bePlayer")) {
                 val pattern = Pattern.compile("bePlayer\\('(.*?)', '(.*?)'\\)")
@@ -303,7 +322,10 @@ class DiziMag : MainAPI() {
                     val jsonCipher = matcher.group(2)
                     Log.d("DMG", "key » $key")
                     Log.d("DMG", "jsonCipher » $jsonCipher")
-                    val cipherData = ObjectMapper().readValue(jsonCipher?.replace("\\/", "/"), Cipher::class.java)
+                    val cipherData = ObjectMapper().readValue(
+                        jsonCipher?.replace("\\/", "/"),
+                        Cipher::class.java
+                    )
                     val ctt = cipherData.ct
                     val iv = cipherData.iv
                     val s = cipherData.s
@@ -318,12 +340,12 @@ class DiziMag : MainAPI() {
 
                     callback.invoke(
                         ExtractorLink(
-                            source  = this.name,
-                            name    = this.name,
-                            url     = jsonData.videoLocation,
+                            source = this.name,
+                            name = this.name,
+                            url = jsonData.videoLocation,
                             referer = jsonData.referer,
                             quality = Qualities.Unknown.value,
-                            isM3u8  = true
+                            isM3u8 = true
                         )
                     )
 
