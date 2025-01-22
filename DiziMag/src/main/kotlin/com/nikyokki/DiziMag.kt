@@ -299,7 +299,8 @@ class DiziMag : MainAPI() {
         Log.d("DMG", "data » ${data}")
         val headers = mapOf(
             "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
-            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Referer" to "$mainUrl/"
         )
         var aa = app.get(mainUrl)
         val ci_session = aa.cookies["ci_session"].toString()
@@ -312,9 +313,12 @@ class DiziMag : MainAPI() {
             fixUrlNull(document.selectFirst("div#tv-spoox2 iframe")?.attr("src")) ?: return false
         Log.d("DMG", "iframe » ${iframe}")
 
+
         val docum = app.get(iframe, headers = headers, referer = "$mainUrl/").document
+        Log.d("DMG", docum.toString())
         docum.select("script").forEach { sc ->
             if (sc.text().contains("bePlayer")) {
+                Log.d("DMG", "bePlayer var")
                 val pattern = Pattern.compile("bePlayer\\('(.*?)', '(.*?)'\\)")
                 val matcher = pattern.matcher(sc.text().trimIndent())
                 if (matcher.find()) {
