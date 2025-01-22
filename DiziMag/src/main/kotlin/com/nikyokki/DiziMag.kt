@@ -315,7 +315,6 @@ class DiziMag : MainAPI() {
 
         val docum = app.get(iframe, headers = headers, referer = "$mainUrl/").document
         docum.select("script").forEach { sc ->
-            Log.d("DMG", sc.toString())
             if (sc.toString().contains("bePlayer")) {
                 Log.d("DMG", "bePlayer var")
                 val pattern = Pattern.compile("bePlayer\\('(.*?)', '(.*?)'\\)")
@@ -341,18 +340,23 @@ class DiziMag : MainAPI() {
                     val jsonData = ObjectMapper().readValue(decrypt, JsonData::class.java)
                     Log.d("DMG", "jsonData » $jsonData")
 
+                    val m3u8Content = app.get(jsonData.videoLocation, referer = iframe, headers = mapOf("Accept" to "*/*", "Referer" to iframe)).document
+                    val regex = Regex("#EXT-X-STREAM-INF:.*?\\n(https?://\\S+)")
+                    Log.d("DMG", m3u8Content.toString())
+                    val matchResult = regex.find(m3u8Content.toString())
+                    val m3uUrl = matchResult?.groupValues?.get(1) ?: ""
+                    Log.d("DMG", m3uUrl)
                     callback.invoke(
                         ExtractorLink(
                             source = this.name,
                             name = this.name,
-                            url = jsonData.videoLocation,
-                            referer = jsonData.referer,
+                            headers = mapOf("Accept" to "*/*", "Referer" to iframe),
+                            url = m3uUrl,
+                            referer = iframe,
                             quality = Qualities.Unknown.value,
                             isM3u8 = true
                         )
                     )
-
-
                 }
             }
         }
