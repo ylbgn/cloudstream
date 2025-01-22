@@ -181,10 +181,10 @@ class DiziMag : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse? {
-        val mainReq = app.get(url)
+
+        val mainReq = app.get(url, referer = mainUrl)
         val document = mainReq.document
-        Log.d("DMG", "document -> $document")
-        val ci_session = mainReq.cookies["ci_session"].toString()
+
         if (url.contains("/dizi/")) {
             val title = document.selectFirst("div.page-title h1")?.selectFirst("a")?.text() ?: return null
             val poster = fixUrlNull(document.selectFirst("div.series-profile-image img")?.attr("src"))
@@ -208,17 +208,18 @@ class DiziMag : MainAPI() {
             val episodeses = mutableListOf<Episode>()
             var szn = 1
             for (sezon in document.select("div.series-profile-episode-list")) {
-                var blm = 0
+                Log.d("DMG", sezon.toString())
+                var blm = 1
                 for (bolum in sezon.select("li")) {
                     val epName = bolum.selectFirst("h6.truncate a")?.text() ?: continue
-                    println("epName: $epName")
+                    Log.d("DMG","epName: $epName")
                     val epHref = fixUrlNull(bolum.select("h6.truncate a").attr("href")) ?: continue
-                    println("epHref: $epHref")
+                    Log.d("DMG","epHref: $epHref")
                     val epEpisode = blm++
-                    println("epEpisode: $epEpisode")
+                    Log.d("DMG","epEpisode: $epEpisode")
                     //val epSeason  = bolum.selectFirst("div.seasons-menu")?.text()?.substringBefore(".Sezon")?.trim()?.toIntOrNull()
                     val epSeason = szn
-                    println("epSeason: $epSeason")
+                    Log.d("DMG","epSeason: $epSeason")
 
                     episodeses.add(
                         Episode(
@@ -280,12 +281,18 @@ class DiziMag : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         Log.d("DMG", "data » ${data}")
-        val document = app.get(data).document
+        val headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+        var aa = app.get(mainUrl)
+        val ci_session = aa.cookies["ci_session"].toString()
+        val document = app.get(data, headers = headers, cookies = mapOf(
+            "ci_session" to ci_session
+        )).document
+        Log.d("DMG", document.toString())
         var iframe =
             fixUrlNull(document.selectFirst("div.tv-spoox2 iframe")?.attr("src")) ?: return false
         Log.d("DMG", "iframe » ${iframe}")
-        val headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
-            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+
         val docum  = app.get(iframe, headers = headers, referer = "$mainUrl/").document
         docum.select("script").forEach { sc ->
             if (sc.text().contains("bePlayer")) {
