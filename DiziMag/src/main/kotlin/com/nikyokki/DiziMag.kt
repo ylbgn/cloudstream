@@ -219,7 +219,6 @@ class DiziMag : MainAPI() {
             val episodeses = mutableListOf<Episode>()
             var szn = 1
             for (sezon in document.select("div.series-profile-episode-list")) {
-                Log.d("DMG", sezon.toString())
                 var blm = 1
                 for (bolum in sezon.select("li")) {
                     val epName = bolum.selectFirst("h6.truncate a")?.text() ?: continue
@@ -315,9 +314,9 @@ class DiziMag : MainAPI() {
 
 
         val docum = app.get(iframe, headers = headers, referer = "$mainUrl/").document
-        Log.d("DMG", docum.toString())
         docum.select("script").forEach { sc ->
-            if (sc.text().contains("bePlayer")) {
+            Log.d("DMG", sc.toString())
+            if (sc.toString().contains("bePlayer")) {
                 Log.d("DMG", "bePlayer var")
                 val pattern = Pattern.compile("bePlayer\\('(.*?)', '(.*?)'\\)")
                 val matcher = pattern.matcher(sc.text().trimIndent())
