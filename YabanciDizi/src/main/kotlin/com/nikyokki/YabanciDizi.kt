@@ -136,7 +136,7 @@ class YabanciDizi : MainAPI() {
         Log.d("YBD", trailer.toString())
 
         val actors = document.selectFirst("div.global-box")?.select("div.item")?.map {
-            Actor(it.selectFirst("h5")!!.text(), it.selectFirst("img")!!.attr("src"))
+            Actor(it.selectFirst("h5")!!.text(), fixUrlNull(it.selectFirst("img")!!.attr("src")))
         }
 
         if (url.contains("/dizi/")) {
@@ -210,22 +210,25 @@ class YabanciDizi : MainAPI() {
                 ).text
                 val cryptData =
                     Regex("""CryptoJS\.AES\.decrypt\(\"(.*)\",\"""").find(iDoc)?.groupValues?.get(1)
-                        ?: return false
+                        ?: ""
                 val cryptPass =
-                    Regex("""\",\"(.*)\"\);""").find(iDoc)?.groupValues?.get(1) ?: return false
+                    Regex("""\",\"(.*)\"\);""").find(iDoc)?.groupValues?.get(1) ?: ""
                 val decryptedData = CryptoJS.decrypt(cryptPass, cryptData)
                 val decryptedDoc = Jsoup.parse(decryptedData)
                 val vidUrl =
                     Regex("""file: \'(.*)',""").find(decryptedDoc.html())?.groupValues?.get(1)
-                        ?: return false
+                        ?: ""
                 Log.d("YBD", vidUrl)
+                val aa = app.get(vidUrl, referer = "$mainUrl/", headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")).document
+                val sonUrl = extractLinkFromM3UString(aa.toString()) ?: ""
                 callback.invoke(
                     ExtractorLink(
                         source = it.text(),
                         name = it.text(),
-                        url = vidUrl,
-                        referer = "$mainUrl/",
-                        headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0"),
+                        url = sonUrl,
+                        referer = vidUrl,
+                        headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                            "Referer" to vidUrl),
                         quality = getQualityFromName("4k"),
                         isM3u8 = true
                     )
@@ -249,5 +252,11 @@ class YabanciDizi : MainAPI() {
             }
         }
         return true
+    }
+
+    fun extractLinkFromM3UString(m3uString: String): String? {
+        val regex = """#EXT-X-STREAM-INF:.*?\r?\n(https?://.*)""".toRegex()
+        val matchResult = regex.find(m3uString)
+        return matchResult?.groupValues?.get(1)
     }
 }
