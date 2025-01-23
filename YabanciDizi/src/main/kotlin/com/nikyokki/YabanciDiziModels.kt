@@ -56,6 +56,7 @@ data class TVSeries(
     @JsonProperty("@type") val type: String,
     val name: String,
     val image: String,
+    val datePublished: String,
     val actor: List<Any>,
     val description: String,
     val potentialAction: WatchAction,
@@ -85,8 +86,7 @@ data class VideoObject(
     val thumbnailUrl: String,
     val thumbnail: ImageObject,
     val timeRequired: String,
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
-    val uploadDate: OffsetDateTime,
+    val uploadDate: String,
     val embedUrl: String,
     val duration: String,
     val publisher: Organization,
@@ -119,10 +119,12 @@ data class TVSeason(
     val episode: List<TVEpisode>
 )
 
+
 data class TVEpisode(
     @JsonProperty("@type") val type: String,
     val episodeNumber: String,
     val name: String,
+    val datePublished: String,
     val url: String
 )
 
@@ -142,7 +144,6 @@ data class Person(
 data class Review(
     @JsonProperty("@type") val type: String,
     val author: Person,
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
-    val datePublished: OffsetDateTime,
+    val datePublished: String,
     val reviewBody: String
 )

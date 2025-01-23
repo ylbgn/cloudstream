@@ -110,20 +110,7 @@ class YabanciDizi : MainAPI() {
         val headers = mapOf("Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
         val document = app.get(url, referer = mainUrl, headers = headers).document
-        val json = document.selectFirst("div#router-view script").toString()
-        val mapper = jacksonObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false) // ignore unknown properties
-            .registerModule(JavaTimeModule()) // Register the JavaTimeModule
-        var tvSeries: TVSeries? = null
-        try {
-            tvSeries = mapper.readValue(json)
-            Log.d("JSON", tvSeries!!.name)
-            Log.d("JSON", tvSeries!!.description)
-            Log.d("JSON", tvSeries!!.containsSeason.size.toString())
-        } catch (e: Exception) {
-            println("Error parsing JSON: ${e.message}")
-            e.printStackTrace()
-        }
+
         val title       = document.selectFirst("h1 a")?.text()?.trim() ?: return null
         Log.d("YBD",title)
         val poster      = fixUrlNull(document.selectFirst("div#series-profile-wrapper img")?.attr("src")) ?: return null
@@ -142,6 +129,19 @@ class YabanciDizi : MainAPI() {
         Log.d("YBD", trailer.toString())
         val actors      = document.select("div.global-box div div").map {
             Actor(it.selectFirst("h5")!!.text(), it.selectFirst("img")!!.attr("src"))
+        }
+        val json = document.selectFirst("div#router-view script").toString()
+        val mapper = jacksonObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        var tvSeries: TVSeries? = null
+        try {
+            tvSeries = mapper.readValue(json)
+            Log.d("JSON", tvSeries!!.name)
+            Log.d("JSON", tvSeries!!.description)
+            Log.d("JSON", tvSeries!!.containsSeason.size.toString())
+        } catch (e: Exception) {
+            println("Error parsing JSON: ${e.message}")
+            e.printStackTrace()
         }
 
         if (url.contains("/dizi/")) {
