@@ -1,8 +1,6 @@
 package com.nikyokki
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
-import java.time.OffsetDateTime
 
 data class Cipher(
     @JsonProperty("ct") val ct: String,

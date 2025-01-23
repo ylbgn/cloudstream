@@ -124,12 +124,12 @@ class YabanciDizi : MainAPI() {
         Log.d("YBD", year.toString())
         val description = document.selectFirst("div.series-summary-wrapper p")?.text()?.trim()
         Log.d("YBD", description.toString())
-        val tags = document.select("div.series-profile-type a").mapNotNull { it.text().trim() }
+        val tags = document.select("div.ui.list a").mapNotNull { it.text().trim() }
         Log.d("YBD", tags.toString())
-        val rating = document.selectFirst("span.color-imdb")?.text()?.trim()?.toRatingInt()
+        val rating = document.selectFirst("div.color-imdb")?.text()?.trim()?.toRatingInt()
         Log.d("YBD", rating.toString())
         val duration =
-            document.selectXpath("//span[text()='Süre']//following-sibling::p").text().trim()
+            document.selectXpath("//div[text()='Süre']//following-sibling::div").text().trim()
                 .split(" ").first().toIntOrNull()
         Log.d("YBD", duration.toString())
         val trailer = document.selectFirst("div.media-trailer")?.attr("data-yt")
@@ -138,33 +138,9 @@ class YabanciDizi : MainAPI() {
         val actors = document.selectFirst("div.global-box")?.select("div.item")?.map {
             Actor(it.selectFirst("h5")!!.text(), it.selectFirst("img")!!.attr("src"))
         }
-        val json = document.selectFirst("div#router-view script").toString()
-        val mapper = jacksonObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        var tvSeries: TVSeries? = null
-        try {
-            tvSeries = mapper.readValue(json)
-            Log.d("JSON", tvSeries!!.name)
-            Log.d("JSON", tvSeries.description)
-            Log.d("JSON", tvSeries.containsSeason.size.toString())
-        } catch (e: Exception) {
-            println("Error parsing JSON: ${e.message}")
-            e.printStackTrace()
-        }
 
         if (url.contains("/dizi/")) {
             val episodes = mutableListOf<Episode>()
-
-            for (season in tvSeries!!.containsSeason) {
-                val szn = season.seasonNumber
-                Log.d("JSON", "Sezon $szn")
-                for (ep in season.episode) {
-                    val epName = ep.name
-                    val epUrl = ep.url
-                    val epNumb = ep.episodeNumber
-                    Log.d("JSON", "epname: $epName; epUrl: $epUrl; epNumb: $epNumb")
-                }
-            }
             document.select("div.tabular-content").forEach {
                 val epSeason = it.parent()?.attr("data-season")?.toIntOrNull()
                 var epEpisode = 0
