@@ -103,29 +103,29 @@ class YabanciDizi : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse? {
-        val headers = mapOf("Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
+        val headers = mapOf("Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
         val document = app.get(url, referer = mainUrl, headers = headers).document
-
+        Log.d("YBD", document.toString())
         val title       = document.selectFirst("h1 a")?.text()?.trim() ?: return null
-        val poster      = fixUrlNull(document.selectFirst("div.series-profile-image img")?.attr("src")) ?: return null
-        val year        = document.selectFirst("h1 span")?.text()?.substringAfter("(")?.substringBefore(")")?.toIntOrNull()
-        val description = document.selectFirst("div.series-profile-summary p")?.text()?.trim()
-        val tags        = document.select("div.series-profile-type a").mapNotNull { it?.text()?.trim() }
-        val rating      = document.selectFirst("span.color-imdb")?.text()?.trim()?.toRatingInt()
-        val duration    = document.selectXpath("//span[text()='Süre']//following-sibling::p").text().trim().split(" ").first().toIntOrNull()
-        val trailer     = document.selectFirst("div.series-profile-trailer")?.attr("data-yt")
-        val actors      = document.select("div.series-profile-cast li").map {
-            Actor(it.selectFirst("h5")!!.text(), it.selectFirst("img")!!.attr("data-src"))
-        }
         Log.d("YBD",title)
+        val poster      = fixUrlNull(document.selectFirst("div#series-profile-wrapper img")?.attr("src")) ?: return null
         Log.d("YBD",poster)
+        val year        = document.selectFirst("h1 span")?.text()?.substringAfter("(")?.substringBefore(")")?.toIntOrNull()
         Log.d("YBD", year.toString())
+        val description = document.selectFirst("div.series-summary-wrapper p")?.text()?.trim()
         Log.d("YBD", description.toString())
+        val tags        = document.select("div.series-profile-type a").mapNotNull { it?.text()?.trim() }
         Log.d("YBD", tags.toString())
+        val rating      = document.selectFirst("span.color-imdb")?.text()?.trim()?.toRatingInt()
         Log.d("YBD", rating.toString())
+        val duration    = document.selectXpath("//span[text()='Süre']//following-sibling::p").text().trim().split(" ").first().toIntOrNull()
         Log.d("YBD", duration.toString())
+        val trailer     = document.selectFirst("div.media-trailer")?.attr("data-yt")
         Log.d("YBD", trailer.toString())
+        val actors      = document.select("div.global-box div div").map {
+            Actor(it.selectFirst("h5")!!.text(), it.selectFirst("img")!!.attr("src"))
+        }
 
         if (url.contains("/dizi/")) {
             val episodes    = mutableListOf<Episode>()
