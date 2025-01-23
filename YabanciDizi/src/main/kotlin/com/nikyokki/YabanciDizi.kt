@@ -19,6 +19,7 @@ import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.fixUrlNull
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
@@ -102,7 +103,7 @@ class YabanciDizi : MainAPI() {
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
-    override suspend fun load(url: String): LoadResponse? {
+    override suspend fun load(url: String): LoadResponse {
         Log.d("YBD", url)
         val headers = mapOf(
             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -133,7 +134,8 @@ class YabanciDizi : MainAPI() {
         Log.d("YBD", duration.toString())
         val trailer = document.selectFirst("div.media-trailer")?.attr("data-yt")
         Log.d("YBD", trailer.toString())
-        val actors = document.select("div.global-box div div").map {
+
+        val actors = document.selectFirst("div.global-box")?.select("div.item")?.map {
             Actor(it.selectFirst("h5")!!.text(), it.selectFirst("img")!!.attr("src"))
         }
         val json = document.selectFirst("div#router-view script").toString()
