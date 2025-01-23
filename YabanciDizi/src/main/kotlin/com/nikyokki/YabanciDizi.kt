@@ -103,7 +103,9 @@ class YabanciDizi : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse? {
-        val document = app.get(url).document
+        val headers = mapOf("Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
+        val document = app.get(url, referer = mainUrl, headers = headers).document
 
         val title       = document.selectFirst("h1 a")?.text()?.trim() ?: return null
         val poster      = fixUrlNull(document.selectFirst("div.series-profile-image img")?.attr("src")) ?: return null
@@ -116,16 +118,23 @@ class YabanciDizi : MainAPI() {
         val actors      = document.select("div.series-profile-cast li").map {
             Actor(it.selectFirst("h5")!!.text(), it.selectFirst("img")!!.attr("data-src"))
         }
+        Log.d("YBD",title)
+        Log.d("YBD",poster)
+        Log.d("YBD", year.toString())
+        Log.d("YBD", description.toString())
+        Log.d("YBD", tags.toString())
+        Log.d("YBD", rating.toString())
+        Log.d("YBD", duration.toString())
+        Log.d("YBD", trailer.toString())
 
         if (url.contains("/dizi/")) {
             val episodes    = mutableListOf<Episode>()
-            document.select("div.series-profile-episode-list").forEach {
-                val epSeason = it.parent()!!.id().split("-").last().toIntOrNull()
-
-                it.select("li").forEach ep@ { episodeElement ->
+            document.select("div.tabular-content").forEach {
+                val epSeason = it.parent()?.attr("data-season")?.toIntOrNull()
+                var epEpisode = 0
+                it.select("div.item").forEach ep@ { episodeElement ->
                     val epHref    = fixUrlNull(episodeElement.selectFirst("h6 a")?.attr("href")) ?: return@ep
-                    val epEpisode = episodeElement.selectFirst("a.truncate data")?.text()?.trim()?.toIntOrNull()
-
+                    epEpisode++
                     episodes.add(Episode(
                         data    = epHref,
                         name    = "${epSeason}. Sezon ${epEpisode}. Bölüm",
