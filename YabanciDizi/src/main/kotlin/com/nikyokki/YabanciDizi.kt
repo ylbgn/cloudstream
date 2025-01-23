@@ -112,10 +112,10 @@ class YabanciDizi : MainAPI() {
 
         Log.d("YBD", "Basliyoruz")
         Log.d("YBD", document.title())
-        val title = document.selectFirst("h1 a")?.text()?.trim() ?: return null
+        val title = document.selectFirst("h1.page-title")?.text()?.trim() ?: "Title"
         Log.d("YBD", title)
         val poster = fixUrlNull(document.selectFirst("div#series-profile-wrapper img")?.attr("src"))
-            ?: return null
+            ?: ""
         Log.d("YBD", poster)
         val year =
             document.selectFirst("h1 span")?.text()?.substringAfter("(")?.substringBefore(")")
