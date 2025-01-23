@@ -2,7 +2,11 @@ package com.nikyokki
 
 import CryptoJS
 import android.util.Log
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.ErrorLoadingException
@@ -106,6 +110,20 @@ class YabanciDizi : MainAPI() {
         val headers = mapOf("Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
         val document = app.get(url, referer = mainUrl, headers = headers).document
+        val json = document.selectFirst("div#router-view script").toString()
+        val mapper = jacksonObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false) // ignore unknown properties
+            .registerModule(JavaTimeModule()) // Register the JavaTimeModule
+        var tvSeries: TVSeries? = null
+        try {
+            tvSeries = mapper.readValue(json)
+            Log.d("JSON", tvSeries!!.name)
+            Log.d("JSON", tvSeries!!.description)
+            Log.d("JSON", tvSeries!!.containsSeason.size.toString())
+        } catch (e: Exception) {
+            println("Error parsing JSON: ${e.message}")
+            e.printStackTrace()
+        }
         val title       = document.selectFirst("h1 a")?.text()?.trim() ?: return null
         Log.d("YBD",title)
         val poster      = fixUrlNull(document.selectFirst("div#series-profile-wrapper img")?.attr("src")) ?: return null
@@ -128,6 +146,17 @@ class YabanciDizi : MainAPI() {
 
         if (url.contains("/dizi/")) {
             val episodes    = mutableListOf<Episode>()
+            
+            for (season in tvSeries!!.containsSeason) {
+                val szn = season.seasonNumber
+                Log.d("JSON", "Sezon $szn")
+                for (ep in season.episode) {
+                    val epName = ep.name
+                    val epUrl = ep.url
+                    val epNumb = ep.episodeNumber
+                    Log.d("JSON", "epname: $epName; epUrl: $epUrl; epNumb: $epNumb")
+                }
+            }
             document.select("div.tabular-content").forEach {
                 val epSeason = it.parent()?.attr("data-season")?.toIntOrNull()
                 var epEpisode = 0

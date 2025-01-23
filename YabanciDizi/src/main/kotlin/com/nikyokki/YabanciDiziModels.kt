@@ -1,6 +1,8 @@
 package com.nikyokki
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
+import java.time.OffsetDateTime
 
 data class Cipher(
     @JsonProperty("ct") val ct: String,
@@ -47,4 +49,100 @@ data class JsonData(
 data class SearchResult(
     @JsonProperty("success") val success: Boolean?,
     @JsonProperty("theme") val theme: String
+)
+
+data class TVSeries(
+    @JsonProperty("@context") val context: String,
+    @JsonProperty("@type") val type: String,
+    val name: String,
+    val image: String,
+    val actor: List<Any>,
+    val description: String,
+    val potentialAction: WatchAction,
+    val countryOfOrigin: Country,
+    val trailer: VideoObject,
+    val timeRequired: String,
+    val containsSeason: List<TVSeason>,
+    val aggregateRating: AggregateRating,
+    val director: Person,
+    val review: Review
+)
+
+data class WatchAction(
+    @JsonProperty("@type") val type: String,
+    val target: String
+)
+
+data class Country(
+    @JsonProperty("@type") val type: String,
+    val name: String
+)
+
+data class VideoObject(
+    @JsonProperty("@type") val type: String,
+    val name: String,
+    val description: String,
+    val thumbnailUrl: String,
+    val thumbnail: ImageObject,
+    val timeRequired: String,
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+    val uploadDate: OffsetDateTime,
+    val embedUrl: String,
+    val duration: String,
+    val publisher: Organization,
+    val interactionCount: String
+)
+
+data class ImageObject(
+    @JsonProperty("@type") val type: String,
+    @JsonProperty("contentUrl")
+    var contentUrl: String? = null,
+    @JsonProperty("url")
+    var url: String? = null
+) {
+    init {
+        if (url != null && contentUrl == null) {
+            contentUrl = url
+        }
+    }
+}
+
+data class Organization(
+    @JsonProperty("@type") val type: String,
+    val name: String,
+    val logo: ImageObject
+)
+
+data class TVSeason(
+    @JsonProperty("@type") val type: String,
+    val seasonNumber: String,
+    val episode: List<TVEpisode>
+)
+
+data class TVEpisode(
+    @JsonProperty("@type") val type: String,
+    val episodeNumber: String,
+    val name: String,
+    val url: String
+)
+
+data class AggregateRating(
+    @JsonProperty("@type") val type: String,
+    val ratingValue: String,
+    val bestRating: String,
+    val worstRating: String,
+    val ratingCount: String
+)
+
+data class Person(
+    @JsonProperty("@type") val type: String,
+    val name: String
+)
+
+data class Review(
+    @JsonProperty("@type") val type: String,
+    val author: Person,
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+    val datePublished: OffsetDateTime,
+    val reviewBody: String
 )
