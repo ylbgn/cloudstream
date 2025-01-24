@@ -30,6 +30,7 @@ import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import kotlin.math.log
 
 class YabanciDizi : MainAPI() {
     override var mainUrl = "https://yabancidizi.tv"
@@ -221,6 +222,7 @@ class YabanciDizi : MainAPI() {
                 Log.d("YBD", vidUrl)
                 val aa = app.get(vidUrl, referer = "$mainUrl/", headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")).document
                 val sonUrl = extractLinkFromM3UString(aa.toString()) ?: ""
+                Log.d("YBD", sonUrl)
                 callback.invoke(
                     ExtractorLink(
                         source = it.text(),
@@ -257,6 +259,7 @@ class YabanciDizi : MainAPI() {
     fun extractLinkFromM3UString(m3uString: String): String? {
         val regex = """#EXT-X-STREAM-INF:.*?\r?\n(https?://.*)""".toRegex()
         val matchResult = regex.find(m3uString)
+        Log.d("YBD", matchResult.toString())
         return matchResult?.groupValues?.get(1)
     }
 }
