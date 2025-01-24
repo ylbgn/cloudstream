@@ -44,11 +44,6 @@ data class JsonData(
     @JsonProperty("download") val download: Boolean
 )
 
-data class SearchResult(
-    @JsonProperty("success") val success: Boolean?,
-    @JsonProperty("theme") val theme: String
-)
-
 data class TVSeries(
     @JsonProperty("@context") val context: String,
     @JsonProperty("@type") val type: String,
@@ -144,4 +139,23 @@ data class Review(
     val author: Person,
     val datePublished: String,
     val reviewBody: String
+)
+
+data class ResultItem(
+    val s_type: String,
+    val s_link: String,
+    val s_name: String,
+    val s_image: String,
+    val s_year: String
+)
+
+data class Data(
+    val result: List<ResultItem>,
+    val type: String?
+)
+
+data class JsonResponse(
+    val success: Int,
+    val data: Data,
+    val type: String?
 )

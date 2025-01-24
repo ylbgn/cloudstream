@@ -2,9 +2,6 @@ package com.nikyokki
 
 import CryptoJS
 import android.util.Log
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.HomePageResponse
@@ -19,9 +16,9 @@ import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.fixUrlNull
 import com.lagradost.cloudstream3.mainPageOf
-import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
+import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
@@ -30,7 +27,6 @@ import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import kotlin.math.log
 
 class YabanciDizi : MainAPI() {
     override var mainUrl = "https://yabancidizi.tv"
@@ -40,7 +36,7 @@ class YabanciDizi : MainAPI() {
     override val hasQuickSearch = false
     override val hasChromecastSupport = true
     override val hasDownloadSupport = true
-    override val supportedTypes = setOf(TvType.TvSeries)
+    override val supportedTypes = setOf(TvType.TvSeries, TvType.Movie)
 
     // ! CloudFlare bypass
     override var sequentialMainPage =
@@ -87,17 +83,28 @@ class YabanciDizi : MainAPI() {
             "${mainUrl}/search",
             headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
             referer = "${mainUrl}/",
-            data = mapOf("query" to query)
-        ).parsedSafe<SearchResult>()!!.theme
+            data = mapOf("qr" to query)
+        )
 
-        val document = Jsoup.parse(response)
+        Log.d("YBD", "Search: $response")
+
+        val parsedSafe = response.parsedSafe<JsonResponse>()
         val results = mutableListOf<SearchResponse>()
 
-        document.select("ul li").forEach { listItem ->
-            val href = listItem.selectFirst("a")?.attr("href")
-            if (href != null && (href.contains("/dizi/") || href.contains("/film/"))) {
-                val result = listItem.toPostSearchResult()
-                result?.let { results.add(it) }
+        if (parsedSafe?.success == 1) {
+            parsedSafe.data.result.forEach {
+                val title = it.s_name
+                val href = fixUrlNull(it.s_link) ?: ""
+                val posterUrl = fixUrlNull(it.s_image)
+                if (it.s_type == "0") {
+                    results.add(newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+                        this.posterUrl = posterUrl
+                    })
+                } else if (it.s_type == "1") {
+                    results.add(newMovieSearchResponse(title, href, TvType.Movie) {
+                        this.posterUrl = posterUrl
+                    })
+                }
             }
         }
 
@@ -107,41 +114,28 @@ class YabanciDizi : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse {
-        Log.d("YBD", url)
         val headers = mapOf(
             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
         )
         val document = app.get(url, referer = mainUrl, headers = headers).document
 
-        Log.d("YBD", "Basliyoruz")
-        Log.d("YBD", document.title())
         val title = document.selectFirst("h1.page-title")?.text()?.trim() ?: "Title"
-        Log.d("YBD", title)
         val poster = fixUrlNull(document.selectFirst("div#series-profile-wrapper img")?.attr("src"))
             ?: ""
-        Log.d("YBD", poster)
         val year =
             document.selectFirst("h1 span")?.text()?.substringAfter("(")?.substringBefore(")")
                 ?.toIntOrNull()
-        Log.d("YBD", year.toString())
         val description = document.selectFirst("div.series-summary-wrapper p")?.text()?.trim()
-        Log.d("YBD", description.toString())
         val tags = document.select("div.ui.list a").mapNotNull { it.text().trim() }
-        Log.d("YBD", tags.toString())
         val rating = document.selectFirst("div.color-imdb")?.text()?.trim()?.toRatingInt()
-        Log.d("YBD", rating.toString())
         val duration =
             document.selectXpath("//div[text()='Süre']//following-sibling::div").text().trim()
                 .split(" ").first().toIntOrNull()
-        Log.d("YBD", duration.toString())
         val trailer = document.selectFirst("div.media-trailer")?.attr("data-yt")
-        Log.d("YBD", trailer.toString())
-
         val actors = document.selectFirst("div.global-box")?.select("div.item")?.map {
             Actor(it.selectFirst("h5")!!.text(), fixUrlNull(it.selectFirst("img")!!.attr("src")))
         }
-
         if (url.contains("/dizi/")) {
             val episodes = mutableListOf<Episode>()
             document.select("div.tabular-content").forEach {
@@ -222,19 +216,23 @@ class YabanciDizi : MainAPI() {
                     Regex("""file: \'(.*)',""").find(decryptedDoc.html())?.groupValues?.get(1)
                         ?: ""
                 Log.d("YBD", vidUrl)
-                val aa = app.get(vidUrl, referer = "$mainUrl/", headers =
-                mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")).document.body().text()
+                val aa = app.get(
+                    vidUrl, referer = "$mainUrl/", headers =
+                    mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
+                ).document.body().text()
                 val urlList = extractStreamInfoWithRegex(aa)
                 for (sonUrl in urlList) {
                     Log.d("YBD", "sonUrl: ${sonUrl.link} -- ${sonUrl.resolution}")
                     callback.invoke(
                         ExtractorLink(
-                            source = "$name -- ${sonUrl.resolution}" ,
+                            source = "$name -- ${sonUrl.resolution}",
                             name = "$name -- ${sonUrl.resolution}",
                             url = sonUrl.link,
                             referer = vidUrl,
-                            headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
-                                "Referer" to vidUrl),
+                            headers = mapOf(
+                                "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                                "Referer" to vidUrl
+                            ),
                             quality = getQualityFromName(sonUrl.resolution),
                             isM3u8 = true
                         )
@@ -260,8 +258,10 @@ class YabanciDizi : MainAPI() {
         }
         return true
     }
+
     fun extractStreamInfoWithRegex(m3uString: String): List<StreamInfo> {
-        val regex = """#EXT-X-STREAM-INF:.*?RESOLUTION=([^\s,]+).*?(https?://[^\s]+)(?:\s|$)""".toRegex()
+        val regex =
+            """#EXT-X-STREAM-INF:.*?RESOLUTION=([^\s,]+).*?(https?://[^\s]+)(?:\s|$)""".toRegex()
         val streamInfoList = regex.findAll(m3uString)
             .map { matchResult ->
                 val resolution = matchResult.groupValues[1]
@@ -272,4 +272,5 @@ class YabanciDizi : MainAPI() {
         return streamInfoList
     }
 }
+
 data class StreamInfo(val resolution: String, val link: String)
