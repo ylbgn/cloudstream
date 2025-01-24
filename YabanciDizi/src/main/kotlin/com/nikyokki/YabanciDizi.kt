@@ -100,12 +100,12 @@ class YabanciDizi : MainAPI() {
                 val title = it.s_name
                 val posterUrl = fixUrlNull("$mainUrl/uploads/series/${it.s_image}") ?:""
                 if (it.s_type == "0") {
-                    val href = fixUrlNull("$mainUrl/film/${it.s_link}") ?: ""
+                    val href = fixUrlNull("$mainUrl/dizi/${it.s_link}") ?: ""
                     results.add(newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
                         this.posterUrl = posterUrl
                     })
                 } else if (it.s_type == "1") {
-                    val href = fixUrlNull("$mainUrl/dizi/${it.s_link}") ?: ""
+                    val href = fixUrlNull("$mainUrl/film/${it.s_link}") ?: ""
                     results.add(newMovieSearchResponse(title, href, TvType.Movie) {
                         this.posterUrl = posterUrl
                     })
