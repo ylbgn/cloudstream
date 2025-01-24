@@ -51,6 +51,8 @@ class YabanciDizi : MainAPI() {
     override val mainPage = mainPageOf(
         "${mainUrl}/dizi/tur/aile-izle" to "Aile",
         "${mainUrl}/dizi/tur/aksiyon-izle-1" to "Aksiyon",
+        "${mainUrl}/dizi/tur/bilim-kurgu-izle-1" to "Bilim Kurgu",
+        "${mainUrl}/dizi/tur/dram-izle" to "Dram"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -257,7 +259,9 @@ class YabanciDizi : MainAPI() {
     }
 
     fun extractLinkFromM3UString(m3uString: String): String? {
+        Log.d("YBD", "extractLinkFromM3UString")
         val regex = """#EXT-X-STREAM-INF:.*?\r?\n(https?://.*)""".toRegex()
+        Log.d("YBD", m3uString)
         val matchResult = regex.find(m3uString)
         Log.d("YBD", matchResult.toString())
         return matchResult?.groupValues?.get(1)
