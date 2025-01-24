@@ -80,10 +80,9 @@ class YabanciDizi : MainAPI() {
 
     override suspend fun search(query: String): List<SearchResponse> {
         val response = app.post(
-            "${mainUrl}/search",
+            "${mainUrl}/search?qr=$query",
             headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
             referer = "${mainUrl}/",
-            data = mapOf("qr" to query)
         )
 
         Log.d("YBD", "Search: $response")
