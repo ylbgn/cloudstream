@@ -92,14 +92,20 @@ class YabanciDizi : MainAPI() {
 
         if (parsedSafe?.success == 1) {
             parsedSafe.data.result.forEach {
+                println("    s_type: ${it.s_type}")
+                println("    s_link: ${it.s_link}")
+                println("    s_name: ${it.s_name}")
+                println("    s_image: ${it.s_image}")
+                println("    s_year: ${it.s_year}")
                 val title = it.s_name
-                val href = fixUrlNull(it.s_link) ?: ""
-                val posterUrl = fixUrlNull(it.s_image)
+                val posterUrl = fixUrlNull("$mainUrl/uploads/series/${it.s_image}") ?:""
                 if (it.s_type == "0") {
+                    val href = fixUrlNull("$mainUrl/film/${it.s_link}") ?: ""
                     results.add(newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
                         this.posterUrl = posterUrl
                     })
                 } else if (it.s_type == "1") {
+                    val href = fixUrlNull("$mainUrl/dizi/${it.s_link}") ?: ""
                     results.add(newMovieSearchResponse(title, href, TvType.Movie) {
                         this.posterUrl = posterUrl
                     })
