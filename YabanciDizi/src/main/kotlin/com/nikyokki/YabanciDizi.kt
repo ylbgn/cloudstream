@@ -222,7 +222,8 @@ class YabanciDizi : MainAPI() {
                     Regex("""file: \'(.*)',""").find(decryptedDoc.html())?.groupValues?.get(1)
                         ?: ""
                 Log.d("YBD", vidUrl)
-                val aa = app.get(vidUrl, referer = "$mainUrl/", headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")).document
+                val aa = app.get(vidUrl, referer = "$mainUrl/", headers =
+                mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")).document.body().text()
                 val sonUrl = extractLinkFromM3UString(aa.toString()) ?: ""
                 Log.d("YBD", sonUrl)
                 callback.invoke(
