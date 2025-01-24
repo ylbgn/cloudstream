@@ -224,20 +224,22 @@ class YabanciDizi : MainAPI() {
                 Log.d("YBD", vidUrl)
                 val aa = app.get(vidUrl, referer = "$mainUrl/", headers =
                 mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")).document.body().text()
-                val sonUrl = extractLinkFromM3UString(aa.toString()) ?: ""
-                Log.d("YBD", sonUrl)
-                callback.invoke(
-                    ExtractorLink(
-                        source = it.text(),
-                        name = it.text(),
-                        url = sonUrl,
-                        referer = vidUrl,
-                        headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
-                            "Referer" to vidUrl),
-                        quality = getQualityFromName("4k"),
-                        isM3u8 = true
+                val urlList = extractStreamInfoWithRegex(aa)
+                for (sonUrl in urlList) {
+                    Log.d("YBD", "sonUrl: ${sonUrl.link} -- ${sonUrl.resolution}")
+                    callback.invoke(
+                        ExtractorLink(
+                            source = "$name -- ${sonUrl.resolution}" ,
+                            name = "$name -- ${sonUrl.resolution}",
+                            url = sonUrl.link,
+                            referer = vidUrl,
+                            headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                                "Referer" to vidUrl),
+                            quality = getQualityFromName(sonUrl.resolution),
+                            isM3u8 = true
+                        )
                     )
-                )
+                }
             } else if (name.contains("VidMoly")) {
                 val mac = app.post(
                     "https://yabancidizi.tv/api/moly/" +
@@ -258,13 +260,16 @@ class YabanciDizi : MainAPI() {
         }
         return true
     }
-
-    fun extractLinkFromM3UString(m3uString: String): String? {
-        Log.d("YBD", "extractLinkFromM3UString")
-        val regex = """#EXT-X-STREAM-INF:.*?\r?\n(https?://.*)""".toRegex()
-        Log.d("YBD", m3uString)
-        val matchResult = regex.find(m3uString)
-        Log.d("YBD", matchResult.toString())
-        return matchResult?.groupValues?.get(1)
+    fun extractStreamInfoWithRegex(m3uString: String): List<StreamInfo> {
+        val regex = """#EXT-X-STREAM-INF:.*?RESOLUTION=([^\s,]+).*?(https?://[^\s]+)(?:\s|$)""".toRegex()
+        val streamInfoList = regex.findAll(m3uString)
+            .map { matchResult ->
+                val resolution = matchResult.groupValues[1]
+                val link = matchResult.groupValues[2]
+                StreamInfo(resolution, link)
+            }
+            .toList()
+        return streamInfoList
     }
 }
+data class StreamInfo(val resolution: String, val link: String)
