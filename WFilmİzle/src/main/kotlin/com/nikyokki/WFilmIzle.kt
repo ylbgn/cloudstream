@@ -96,7 +96,7 @@ class WFilmIzle : MainAPI() {
         Log.d("WFI", "OrgTitle: $orgTitle")
         val altTitle = document.selectFirst("div.diger_adi h2")?.text()?.trim() ?: ""
         Log.d("WFI", "altTitle: $altTitle")
-        val title = if (altTitle.isNotEmpty()) "${orgTitle} - ${altTitle}" else orgTitle
+        val title = if (altTitle.isNotEmpty()) "$orgTitle - $altTitle" else orgTitle
         Log.d("WFI", "title: $title")
         val poster = fixUrlNull(document.selectFirst("div.poster img")?.attr("src"))
         Log.d("WFI", "poster: $poster")
@@ -133,8 +133,13 @@ class WFilmIzle : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         Log.d("WFI", "data » $data")
+        val response = app.get(mainUrl)
+        val cookie = response.cookies["session_starttime"].toString()
         val document = app.get(data, headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
-            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")).document
+            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+            cookies = mapOf(
+                "session_starttime" to cookie
+            )).document
         val iframe   = fixUrlNull(document.selectFirst("div.vast iframe")?.attr("src")) ?: return false
         Log.d("WFI", "iframe » $iframe")
         val hash = iframe.split("/").last()

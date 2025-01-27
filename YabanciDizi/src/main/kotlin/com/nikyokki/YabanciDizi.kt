@@ -80,16 +80,6 @@ class YabanciDizi : MainAPI() {
         }
     }
 
-    private fun Element.toPostSearchResult(): SearchResponse? {
-        val title = this.selectFirst("h2")?.text()?.trim() ?: return null
-        val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
-
-        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
-            this.posterUrl = posterUrl
-        }
-    }
-
     override suspend fun search(query: String): List<SearchResponse> {
         val response = app.post(
             "${mainUrl}/search?qr=$query",
@@ -108,7 +98,7 @@ class YabanciDizi : MainAPI() {
                 println("    s_image: ${it.s_image}")
                 println("    s_year: ${it.s_year}")
                 val title = it.s_name
-                val posterUrl = fixUrlNull("$mainUrl/uploads/series/${it.s_image}") ?:""
+                val posterUrl = fixUrlNull("$mainUrl/uploads/series/${it.s_image}") ?: ""
                 if (it.s_type == "0") {
                     val href = fixUrlNull("$mainUrl/dizi/${it.s_link}") ?: ""
                     results.add(newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
@@ -221,14 +211,14 @@ class YabanciDizi : MainAPI() {
                     headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
                 ).text
                 val cryptData =
-                    Regex("""CryptoJS\.AES\.decrypt\(\"(.*)\",\"""").find(iDoc)?.groupValues?.get(1)
+                    Regex("""CryptoJS\.AES\.decrypt\("(.*)","""").find(iDoc)?.groupValues?.get(1)
                         ?: ""
                 val cryptPass =
-                    Regex("""\",\"(.*)\"\);""").find(iDoc)?.groupValues?.get(1) ?: ""
+                    Regex("""","(.*)"\);""").find(iDoc)?.groupValues?.get(1) ?: ""
                 val decryptedData = CryptoJS.decrypt(cryptPass, cryptData)
                 val decryptedDoc = Jsoup.parse(decryptedData)
                 val vidUrl =
-                    Regex("""file: \'(.*)',""").find(decryptedDoc.html())?.groupValues?.get(1)
+                    Regex("""file: '(.*)',""").find(decryptedDoc.html())?.groupValues?.get(1)
                         ?: ""
                 Log.d("YBD", vidUrl)
                 val aa = app.get(
@@ -272,7 +262,7 @@ class YabanciDizi : MainAPI() {
         return true
     }
 
-    fun extractStreamInfoWithRegex(m3uString: String): List<StreamInfo> {
+    private fun extractStreamInfoWithRegex(m3uString: String): List<StreamInfo> {
         val regex =
             """#EXT-X-STREAM-INF:.*?RESOLUTION=([^\s,]+).*?(https?://[^\s]+)(?:\s|$)""".toRegex()
         val streamInfoList = regex.findAll(m3uString)
