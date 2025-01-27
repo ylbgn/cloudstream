@@ -133,13 +133,13 @@ class WFilmIzle : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         Log.d("WFI", "data » $data")
-        val cookie = System.currentTimeMillis().toString()
+        val cookie = (System.currentTimeMillis() - 50000)  / 1000
         println("Timestamp (milisaniye): $cookie")
-        Log.d("WFI", cookie)
+        Log.d("WFI", cookie.toString())
         val document = app.get(data, headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
             cookies = mapOf(
-                "session_starttime" to cookie
+                "session_starttime" to cookie.toString()
             )).document
         val iframe   = fixUrlNull(document.selectFirst("div.vast iframe")?.attr("src")) ?: return false
         Log.d("WFI", "iframe » $iframe")
