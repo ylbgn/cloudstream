@@ -34,8 +34,8 @@ class WFilmIzle : MainAPI() {
     override val supportedTypes = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/tur/aile-filmleri-izle-hd/"             to "Aile",
-        "${mainUrl}/tur/aksiyon-filmleri/"          to "Aksiyon",
+        "${mainUrl}/tur/aile-filmleri-izle-hd/"     to "Aile",
+        /*"${mainUrl}/tur/aksiyon-filmleri/"          to "Aksiyon",
         "${mainUrl}/tur/animasyon-filmleri/"        to "Animasyon",
         "${mainUrl}/tur/belgesel/"                  to "Belgesel",
         "${mainUrl}/tur/bilim-kurgu-filmleri/"      to "Bilim Kurgu",
@@ -59,7 +59,7 @@ class WFilmIzle : MainAPI() {
         "${mainUrl}/tur/suc/"                       to "Suç",
         "${mainUrl}/tur/tarih/"                     to "Tarih",
         "${mainUrl}/tur/western-kovboy-filmleri/"   to "Western & Kovboy",
-        "${mainUrl}/tur/yerli-film-izle/"           to "Yerli"
+        "${mainUrl}/tur/yerli-film-izle/"           to "Yerli"*/
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -70,8 +70,8 @@ class WFilmIzle : MainAPI() {
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        val title     = this.selectFirst("span.movie-title")?.text() ?: return null
-        val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
+        val title     = this.selectFirst("span.movie-title")?.text() ?: ""
+        val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: ""
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
 
         return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
@@ -88,7 +88,7 @@ class WFilmIzle : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val document = app.get(url).document
 
-        val orgTitle = document.selectFirst("div.title h1")?.text()?.replace(" izle","")?.trim() ?: return null
+        val orgTitle = document.selectFirst("div.title h1")?.text()?.replace(" izle","")?.trim() ?: ""
         val altTitle = document.selectFirst("div.diger_adi h2")?.text()?.trim() ?: ""
         val title = if (altTitle.isNotEmpty()) "${orgTitle} - ${altTitle}" else orgTitle
         val poster = fixUrlNull(document.selectFirst("div.poster img")?.attr("src"))

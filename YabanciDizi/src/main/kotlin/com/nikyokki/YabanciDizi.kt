@@ -48,7 +48,19 @@ class YabanciDizi : MainAPI() {
         "${mainUrl}/dizi/tur/aile-izle" to "Aile",
         "${mainUrl}/dizi/tur/aksiyon-izle-1" to "Aksiyon",
         "${mainUrl}/dizi/tur/bilim-kurgu-izle-1" to "Bilim Kurgu",
-        "${mainUrl}/dizi/tur/dram-izle" to "Dram"
+        "${mainUrl}/dizi/tur/belgesel" to "Belgesel",
+        "${mainUrl}/dizi/tur/bilim-kurgu-izle-1" to "Bilim Kurgu",
+        "${mainUrl}/dizi/tur/dram-izle" to "Dram",
+        "${mainUrl}/dizi/tur/fantastik-izle" to "Fantastik",
+        "${mainUrl}/dizi/tur/gerilim-izle" to "Gerilim",
+        "${mainUrl}/dizi/tur/gizem-izle" to "Gizem",
+        "${mainUrl}/dizi/tur/komedi-izle" to "Komedi",
+        "${mainUrl}/dizi/tur/korku-izle" to "Korku",
+        "${mainUrl}/dizi/tur/macera-izle" to "Macera",
+        "${mainUrl}/dizi/tur/romantik-izle-1" to "Dram",
+        "${mainUrl}/dizi/tur/suc" to "Suç",
+        "${mainUrl}/dizi/tur/kore-dizileri" to "Kore Dizileri",
+        "${mainUrl}/dizi/tur/stand-up" to "Stand Up",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -84,8 +96,6 @@ class YabanciDizi : MainAPI() {
             headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
             referer = "${mainUrl}/",
         )
-
-        Log.d("YBD", "Search: $response")
 
         val parsedSafe = response.parsedSafe<JsonResponse>()
         val results = mutableListOf<SearchResponse>()
@@ -249,7 +259,6 @@ class YabanciDizi : MainAPI() {
                             dataLink.replace("/", "_").replace("+", "-"), referer = "$mainUrl/"
                 ).document
                 val subFrame = mac.selectFirst("iframe")?.attr("src") ?: return false
-                Log.d("YBD", subFrame)
                 loadExtractor(subFrame, "${mainUrl}/", subtitleCallback, callback)
             } else if (name.contains("Okru")) {
                 val mac = app.post(
@@ -257,7 +266,6 @@ class YabanciDizi : MainAPI() {
                             dataLink.replace("/", "_").replace("+", "-"), referer = "$mainUrl/"
                 ).document
                 val subFrame = mac.selectFirst("iframe")?.attr("src") ?: return false
-                Log.d("YBD", subFrame)
                 loadExtractor(subFrame, "${mainUrl}/", subtitleCallback, callback)
             }
         }
