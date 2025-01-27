@@ -141,7 +141,7 @@ class WFilmIzle : MainAPI() {
             cookies = mapOf(
                 "session_starttime" to cookie.toString()
             )).document
-        val iframe   = fixUrlNull(document.selectFirst("div.vast iframe")?.attr("src")) ?: return false
+        val iframe   = fixUrlNull(document.selectFirst("div.vast iframe")?.attr("src")) ?: ""
         Log.d("WFI", "iframe » $iframe")
         val hash = iframe.split("/").last()
         Log.d("WFI", "hash » $hash")
