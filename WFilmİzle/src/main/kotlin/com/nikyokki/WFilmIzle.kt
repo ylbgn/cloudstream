@@ -97,10 +97,10 @@ class WFilmIzle : MainAPI() {
         val altTitle = document.selectFirst("div.diger_adi h2")?.text()?.trim() ?: ""
         Log.d("WFI", "altTitle: $altTitle")
         val title = if (altTitle.isNotEmpty()) "${orgTitle} - ${altTitle}" else orgTitle
-        Log.d("WFI", "altTitle: $title")
+        Log.d("WFI", "title: $title")
         val poster = fixUrlNull(document.selectFirst("div.poster img")?.attr("src"))
         Log.d("WFI", "poster: $poster")
-        val description = document.selectFirst("div.excerpt p")?.text()?.trim()
+        val description = document.selectFirst("div.excerpt")?.text()?.trim()
         Log.d("WFI", "description: $description")
         val year =
             document.selectFirst("div.release a")?.text()?.trim()?.toIntOrNull()
@@ -108,13 +108,13 @@ class WFilmIzle : MainAPI() {
         val tags = document.select("div.categories a").map { it.text() }
         Log.d("WFI", "tags: $tags")
         val rating =
-            document.selectFirst("div.imdb")?.text()?.split("/")?.first()?.trim()
-                ?.toRatingInt()
+            document.selectFirst("div.imdb")?.text()?.replace("IMDb Puanı:","")
+                ?.split("/")?.first()?.trim()?.toRatingInt()
         Log.d("WFI", "rating: $rating")
         val actors = document.select("div.actor a").map { it.text() }
         Log.d("WFI", "actors: $actors")
         val trailer = document.selectFirst("div.container iframe")?.attr("src")
-        Log.d("WFI", "actors: $trailer")
+        Log.d("WFI", "trailer: $trailer")
         return newMovieLoadResponse(title, url, TvType.Movie, url) {
             this.posterUrl = poster
             this.plot = description
@@ -133,7 +133,8 @@ class WFilmIzle : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         Log.d("WFI", "data » $data")
-        val document = app.get(data).document
+        val document = app.get(data, headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")).document
         val iframe   = fixUrlNull(document.selectFirst("div.vast iframe")?.attr("src")) ?: return false
         Log.d("WFI", "iframe » $iframe")
         val hash = iframe.split("/").last()
