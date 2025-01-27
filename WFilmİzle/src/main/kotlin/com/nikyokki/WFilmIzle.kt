@@ -34,7 +34,7 @@ class WFilmIzle : MainAPI() {
     override val supportedTypes = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/tur/aile-filmleri-izle-hd/"     to "Aile",
+        "${mainUrl}/filmizle/aile-filmleri-izle-hd/"     to "Aile",
         /*"${mainUrl}/tur/aksiyon-filmleri/"          to "Aksiyon",
         "${mainUrl}/tur/animasyon-filmleri/"        to "Animasyon",
         "${mainUrl}/tur/belgesel/"                  to "Belgesel",
@@ -69,7 +69,7 @@ class WFilmIzle : MainAPI() {
         return newHomePageResponse(request.name, home)
     }
 
-    private fun Element.toMainPageResult(): SearchResponse? {
+    private fun Element.toMainPageResult(): SearchResponse {
         val title     = this.selectFirst("span.movie-title")?.text() ?: ""
         Log.d("WFI", "Title: $title")
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: ""
@@ -132,10 +132,33 @@ class WFilmIzle : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        Log.d("WFI", "data » ${data}")
+        Log.d("WFI", "data » $data")
         val document = app.get(data).document
-        var iframe   = fixUrlNull(document.selectFirst("div.vast iframe")?.attr("src")) ?: return false
-        Log.d("WFI", "iframe » ${iframe}")
+        val iframe   = fixUrlNull(document.selectFirst("div.vast iframe")?.attr("src")) ?: return false
+        Log.d("WFI", "iframe » $iframe")
+        val hash = iframe.split("/").last()
+        Log.d("WFI", "hash » $hash")
+        if (iframe.contains("hdplayersystem")) {
+            val json = app.post("https://hdplayersystem.live/player/index.php?data=$hash&do=getVideo", headers =
+            mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox",
+                "Accept" to "application/json, text/javascript, */*; q=0.01", "X-Requested-With" to "XMLHttpRequest",
+                "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8"),
+                data = mapOf(
+                    "hash" to hash,
+                    "r" to "$mainUrl/"
+                ),
+            ).parsedSafe<IframeResponse>()
+            Log.d("WFI", json.toString())
+            val master = json?.videoSource ?: ""
+            val son = app.get(
+                master, headers = mapOf(
+                    "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox",
+                    "Accept" to "*/*", "X-Requested-With" to "XMLHttpRequest",
+                    "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8"
+                )
+            ).document.body().text()
+            Log.d("WFI", son)
+        }
 
         loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
         return true
