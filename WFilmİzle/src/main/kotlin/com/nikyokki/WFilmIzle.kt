@@ -71,8 +71,11 @@ class WFilmIzle : MainAPI() {
 
     private fun Element.toMainPageResult(): SearchResponse? {
         val title     = this.selectFirst("span.movie-title")?.text() ?: ""
+        Log.d("WFI", "Title: $title")
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: ""
+        Log.d("WFI", "Href: $href")
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
+        Log.d("WFI", "Poster: $posterUrl")
 
         return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
     }
@@ -85,23 +88,33 @@ class WFilmIzle : MainAPI() {
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
-    override suspend fun load(url: String): LoadResponse? {
+    override suspend fun load(url: String): LoadResponse {
+        Log.d("WFI", "LoadURL: $url")
         val document = app.get(url).document
 
         val orgTitle = document.selectFirst("div.title h1")?.text()?.replace(" izle","")?.trim() ?: ""
+        Log.d("WFI", "OrgTitle: $orgTitle")
         val altTitle = document.selectFirst("div.diger_adi h2")?.text()?.trim() ?: ""
+        Log.d("WFI", "altTitle: $altTitle")
         val title = if (altTitle.isNotEmpty()) "${orgTitle} - ${altTitle}" else orgTitle
+        Log.d("WFI", "altTitle: $title")
         val poster = fixUrlNull(document.selectFirst("div.poster img")?.attr("src"))
+        Log.d("WFI", "poster: $poster")
         val description = document.selectFirst("div.excerpt p")?.text()?.trim()
+        Log.d("WFI", "description: $description")
         val year =
             document.selectFirst("div.release a")?.text()?.trim()?.toIntOrNull()
+        Log.d("WFI", "year: $year")
         val tags = document.select("div.categories a").map { it.text() }
+        Log.d("WFI", "tags: $tags")
         val rating =
             document.selectFirst("div.imdb")?.text()?.split("/")?.first()?.trim()
                 ?.toRatingInt()
+        Log.d("WFI", "rating: $rating")
         val actors = document.select("div.actor a").map { it.text() }
+        Log.d("WFI", "actors: $actors")
         val trailer = document.selectFirst("div.container iframe")?.attr("src")
-
+        Log.d("WFI", "actors: $trailer")
         return newMovieLoadResponse(title, url, TvType.Movie, url) {
             this.posterUrl = poster
             this.plot = description
@@ -119,10 +132,10 @@ class WFilmIzle : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        Log.d("4KI", "data » ${data}")
+        Log.d("WFI", "data » ${data}")
         val document = app.get(data).document
         var iframe   = fixUrlNull(document.selectFirst("div.vast iframe")?.attr("src")) ?: return false
-        Log.d("4KI", "iframe » ${iframe}")
+        Log.d("WFI", "iframe » ${iframe}")
 
         loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
         return true
