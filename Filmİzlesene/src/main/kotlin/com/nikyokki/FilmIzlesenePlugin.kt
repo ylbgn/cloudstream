@@ -7,6 +7,6 @@ import android.content.Context
 @CloudstreamPlugin
 class FilmIzlesenePlugin: Plugin() {
     override fun load(context: Context) {
-        registerMainAPI(WFilmIzle())
+        registerMainAPI(FilmIzlesene())
     }
 }
