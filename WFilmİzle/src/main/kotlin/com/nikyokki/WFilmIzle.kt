@@ -3,6 +3,7 @@
 package com.nikyokki
 
 import android.util.Log
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
@@ -20,6 +21,7 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
@@ -110,7 +112,7 @@ class WFilmIzle : MainAPI() {
         val rating =
             document.selectFirst("div.imdb")?.text()?.replace("IMDb Puanı:","")
                 ?.split("/")?.first()?.trim()?.toRatingInt()
-        Log.d("WFI", "rating: $rating")
+        Log.d("WFI", "rating: " + document.selectFirst("div.imdb").toString())
         val actors = document.select("div.actor a").map { it.text() }
         Log.d("WFI", "actors: $actors")
         val trailer = document.selectFirst("div.container iframe")?.attr("src")
@@ -141,23 +143,27 @@ class WFilmIzle : MainAPI() {
             cookies = mapOf(
                 "session_starttime" to cookie.toString()
             )).document
-        Log.d("WFI", "Document: $document")
-        val iframe   = fixUrlNull(document.selectFirst("div#vast iframe")?.attr("src")) ?: ""
+        val iframe   = fixUrlNull(document.select("div#vast iframe").last()?.attr("src") ?: "")
         Log.d("WFI", "iframe » $iframe")
-        val hash = iframe.split("/").last()
+        val hash = iframe?.split("/")?.last()
         Log.d("WFI", "hash » $hash")
-        if (iframe.contains("hdplayersystem")) {
+        if (iframe?.contains("hdplayersystem") == true) {
             val json = app.post("https://hdplayersystem.live/player/index.php?data=$hash&do=getVideo", headers =
             mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox",
                 "Accept" to "application/json, text/javascript, */*; q=0.01", "X-Requested-With" to "XMLHttpRequest",
                 "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8"),
                 data = mapOf(
-                    "hash" to hash,
+                    "hash" to hash.toString(),
                     "r" to "$mainUrl/"
                 ),
-            ).parsedSafe<IframeResponse>()
-            Log.d("WFI", json.toString())
-            val master = json?.videoSource ?: ""
+            )
+            Log.d("WFI", "JSONTEXT: ${json.document.body().text()}")
+            val jsonData = ObjectMapper().readValue(json.document.body().text(), IframeResponse::class.java)
+            // 'ck' alanını decode edelim
+            val decodedCK = decodeUnicodeEscapeSequences(jsonData.ck)
+            val updatedVideoData = jsonData.copy(ck = decodedCK)
+            val master = updatedVideoData.videoSource ?: ""
+            Log.d("WFI", "Master: $master")
             val son = app.get(
                 master, headers = mapOf(
                     "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox",
@@ -166,9 +172,33 @@ class WFilmIzle : MainAPI() {
                 )
             ).document.body().text()
             Log.d("WFI", son)
+            val m3uUrl = son.split(" ").last()
+            Log.d("WFI", m3uUrl)
+            callback.invoke(
+                ExtractorLink(
+                    source = name,
+                    name = name,
+                    url = m3uUrl,
+                    referer = mainUrl,
+                    headers = mapOf(
+                        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox",
+                        "Accept" to "*/*", "X-Requested-With" to "XMLHttpRequest",
+                        "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8"
+                    ),
+                    quality = getQualityFromName("1080p"),
+                    isM3u8 = true
+                )
+            )
         }
-
-        loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
+        //loadExtractor(iframe.toS, "${mainUrl}/", subtitleCallback, callback)
         return true
+    }
+    private fun decodeUnicodeEscapeSequences(input: String): String {
+        val pattern = Regex("\\\\x([0-9a-fA-F]{2})")
+        return pattern.replace(input) { matchResult ->
+            val hex = matchResult.groupValues[1]
+            val charCode = hex.toInt(16)
+            charCode.toChar().toString()
+        }
     }
 }
