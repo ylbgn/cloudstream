@@ -40,8 +40,17 @@ data class JsonData(
     @JsonProperty("urls") val urls: String?,
     @JsonProperty("referer") val referer: String,
     @JsonProperty("sitex") val siteX: List<String>,
+    @JsonProperty("strSubtitles") val strSubtitles: List<strSubtitle>,
     @JsonProperty("dws") val dws: Boolean,
     @JsonProperty("download") val download: Boolean
+)
+
+data class strSubtitle(
+    @JsonProperty("file") val file: String?,
+    @JsonProperty("label") val label: String?,
+    @JsonProperty("kind") val kind: String?,
+    @JsonProperty("language") val language: String?,
+    @JsonProperty("default") val default: String?
 )
 
 data class SearchResult(

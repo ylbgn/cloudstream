@@ -15,6 +15,7 @@ import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.fixUrl
 import com.lagradost.cloudstream3.fixUrlNull
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
@@ -240,6 +241,14 @@ class DiziMag : MainAPI() {
 
                     val jsonData = ObjectMapper().readValue(decrypt, JsonData::class.java)
 
+                    for (sub in jsonData.strSubtitles) {
+                        subtitleCallback.invoke(
+                            SubtitleFile(
+                                lang = sub.label.toString(),
+                                url = "https://epikplayer.xyz${sub.file}"
+                            )
+                        )
+                    }
                     val m3u8Content = app.get(
                         jsonData.videoLocation,
                         referer = iframe,
