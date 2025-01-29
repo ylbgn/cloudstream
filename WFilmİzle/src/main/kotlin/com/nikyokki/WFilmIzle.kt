@@ -36,32 +36,25 @@ class WFilmIzle : MainAPI() {
     override val supportedTypes = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/filmizle/aile-filmleri-izle-hd/"     to "Aile",
-        /*"${mainUrl}/tur/aksiyon-filmleri/"          to "Aksiyon",
-        "${mainUrl}/tur/animasyon-filmleri/"        to "Animasyon",
-        "${mainUrl}/tur/belgesel/"                  to "Belgesel",
-        "${mainUrl}/tur/bilim-kurgu-filmleri/"      to "Bilim Kurgu",
-        "${mainUrl}/tur/biyografi/"                 to "Biyografi",
-        "${mainUrl}/tur/dram/"                      to "Dram",
-        "${mainUrl}/tur/editor/"                    to "Editör",
-        "${mainUrl}/tur/fantastik-filmler/"         to "Fantastik",
-        "${mainUrl}/tur/genclik/"                   to "Gençlik",
-        "${mainUrl}/tur/genel/"                     to "Genel",
-        "${mainUrl}/tur/gerilim/"                   to "Gerilim",
-        "${mainUrl}/tur/gizem-filmleri/"            to "Gizem",
-        "${mainUrl}/tur/komedi-filmleri/"           to "Komedi",
-        "${mainUrl}/tur/korku/"                     to "Korku",
-        "${mainUrl}/tur/macera-filmleri/"           to "Macera",
-        "${mainUrl}/tur/muzik/"                     to "Müzik",
-        "${mainUrl}/tur/muzikal/"                   to "Müzikal",
-        "${mainUrl}/tur/polisiye-filmler/"          to "Polisiye",
-        "${mainUrl}/tur/romantik/"                  to "Romantik",
-        "${mainUrl}/tur/savas-filmleri/"            to "Savaş",
-        "${mainUrl}/tur/spor/"                      to "Spor",
-        "${mainUrl}/tur/suc/"                       to "Suç",
-        "${mainUrl}/tur/tarih/"                     to "Tarih",
-        "${mainUrl}/tur/western-kovboy-filmleri/"   to "Western & Kovboy",
-        "${mainUrl}/tur/yerli-film-izle/"           to "Yerli"*/
+        "${mainUrl}/filmizle/aile-filmleri-izle-hd/"             to "Aile",
+        "${mainUrl}/filmizle/aksiyon-filmleri-izle-hd/"          to "Aksiyon",
+        "${mainUrl}/filmizle/animasyon-filmleri-izle/"           to "Animasyon",
+        "${mainUrl}/filmizle/belgesel-filmleri-izle/"            to "Belgesel",
+        "${mainUrl}/filmizle/bilim-kurgu-filmleri-izle/"         to "Bilim Kurgu",
+        "${mainUrl}/filmizle/dram-filmleri-izle/"                to "Dram",
+        "${mainUrl}/filmizle/fantastik-filmler-izle/"            to "Fantastik",
+        "${mainUrl}/filmizle/gerilimm-filmleri-izle/"            to "Gerilim",
+        "${mainUrl}/filmizle/gizem-filmleri-izle/"               to "Gizem",
+        "${mainUrl}/filmizle/komedi-filmleri-izle-hd/"           to "Komedi",
+        "${mainUrl}/filmizle/korkuu-filmleri-izle/"              to "Korku",
+        "${mainUrl}/filmizle/macera-filmleri-izle-hd/"           to "Macera",
+        "${mainUrl}/filmizle/polisiye-filmleri-izle-hd/"         to "Polisiye",
+        "${mainUrl}/filmizle/romantik-filmler-izle/"             to "Romantik",
+        "${mainUrl}/filmizle/savas-filmmleri-izle/"              to "Savaş",
+        "${mainUrl}/filmizle/sporr-filmleri-izle/"               to "Spor",
+        "${mainUrl}/filmizle/succ-filmleri-izle/"                to "Suç",
+        "${mainUrl}/filmizle/tarih-filmleri-izle-hd/"            to "Tarih",
+        "${mainUrl}/filmizle/vahsi-bati-filmleri-izle/"          to "Vahşi Batı",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -109,9 +102,8 @@ class WFilmIzle : MainAPI() {
         Log.d("WFI", "year: $year")
         val tags = document.select("div.categories a").map { it.text() }
         Log.d("WFI", "tags: $tags")
-        val rating =
-            document.selectFirst("div.imdb")?.text()?.replace("IMDb Puanı:","")
-                ?.split("/")?.first()?.trim()?.toRatingInt()
+        val rating = document.select("div.imdb").last()?.text()?.replace("IMDb Puanı:","")?.split("/")
+            ?.first()?.trim()?.toRatingInt()
         Log.d("WFI", "rating: " + document.selectFirst("div.imdb").toString())
         val actors = document.select("div.actor a").map { it.text() }
         Log.d("WFI", "actors: $actors")

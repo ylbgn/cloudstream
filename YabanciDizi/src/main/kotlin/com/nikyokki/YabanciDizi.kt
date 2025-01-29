@@ -132,7 +132,12 @@ class YabanciDizi : MainAPI() {
             document.selectFirst("h1 span")?.text()?.substringAfter("(")?.substringBefore(")")
                 ?.toIntOrNull()
         val description = document.selectFirst("div.series-summary-wrapper p")?.text()?.trim()
-        val tags = document.select("div.ui.list a").mapNotNull { it.text().trim() }
+        val tags = mutableListOf<String>()
+        document.select("div.ui.list a").forEach {
+            if (it.attr("href").contains("/oyuncu/")) {
+                tags.add(it.text().trim())
+            }
+        }
         val rating = document.selectFirst("div.color-imdb")?.text()?.trim()?.toRatingInt()
         val duration =
             document.selectXpath("//div[text()='Süre']//following-sibling::div").text().trim()

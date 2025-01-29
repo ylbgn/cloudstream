@@ -3,8 +3,6 @@
 package com.nikyokki
 
 import android.util.Log
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.HomePageResponse
 import com.lagradost.cloudstream3.LoadResponse
 import com.lagradost.cloudstream3.LoadResponse.Companion.addActors
@@ -22,7 +20,6 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
@@ -37,20 +34,20 @@ class FilmIzlesene : MainAPI() {
     override val supportedTypes = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/kategori/turler/aile-filmleri-izle-1"           to "Aile",
-        "${mainUrl}/kategori/turler/animasyon-izle"                 to "Animasyon",
-        "${mainUrl}/kategori/turler/belgesel-filmleri-izle-1"       to "Belgesel",
-        "${mainUrl}/kategori/turler/biyografi-filmleri-izle-1"      to "Biyografi",
-        "${mainUrl}/kategori/turler/dram-izle"                      to "Dram",
-        "${mainUrl}/kategori/turler/fantastik-bilim-kurgu-izle"     to "Fantasik-Bilim Kurgu",
-        "${mainUrl}/kategori/turler/gizem-izle"                     to "Gizem",
-        "${mainUrl}/kategori/turler/komedi-izle"                    to "Komedi",
-        "${mainUrl}/kategori/turler/korku-gerilim-izle"             to "Korku-Gerilim",
-        "${mainUrl}/kategori/turler/macera-aksiyon-izle"            to "Macera-Aksiyon",
-        "${mainUrl}/kategori/turler/polisiye-suc-izle"              to "Polisiye-Suç",
-        "${mainUrl}/kategori/turler/romantik-duygusal-izle"         to "Romantik",
-        "${mainUrl}/kategori/turler/sava-filmleri-izle-2"           to "Savaş",
-        "${mainUrl}/kategori/turler/tarih-filmleri-izle-1"          to "Tarih",
+        "${mainUrl}/kategori/turler/aile-filmleri-izle-1" to "Aile",
+        "${mainUrl}/kategori/turler/animasyon-izle" to "Animasyon",
+        "${mainUrl}/kategori/turler/belgesel-filmleri-izle-1" to "Belgesel",
+        "${mainUrl}/kategori/turler/biyografi-filmleri-izle-1" to "Biyografi",
+        "${mainUrl}/kategori/turler/dram-izle" to "Dram",
+        "${mainUrl}/kategori/turler/fantastik-bilim-kurgu-izle" to "Fantasik-Bilim Kurgu",
+        "${mainUrl}/kategori/turler/gizem-izle" to "Gizem",
+        "${mainUrl}/kategori/turler/komedi-izle" to "Komedi",
+        "${mainUrl}/kategori/turler/korku-gerilim-izle" to "Korku-Gerilim",
+        "${mainUrl}/kategori/turler/macera-aksiyon-izle" to "Macera-Aksiyon",
+        "${mainUrl}/kategori/turler/polisiye-suc-izle" to "Polisiye-Suç",
+        "${mainUrl}/kategori/turler/romantik-duygusal-izle" to "Romantik",
+        "${mainUrl}/kategori/turler/sava-filmleri-izle-2" to "Savaş",
+        "${mainUrl}/kategori/turler/tarih-filmleri-izle-1" to "Tarih",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -61,9 +58,9 @@ class FilmIzlesene : MainAPI() {
     }
 
     private fun Element.toMainPageResult(): SearchResponse {
-        val title     = this.selectFirst("div.film-ismi a")?.text() ?: ""
+        val title = this.selectFirst("div.film-ismi a")?.text() ?: ""
         Log.d("FIS", "Title: $title")
-        val href      = fixUrlNull(this.selectFirst("div.film-ismi a")?.attr("href")) ?: ""
+        val href = fixUrlNull(this.selectFirst("div.film-ismi a")?.attr("href")) ?: ""
         Log.d("FIS", "Href: $href")
         val posterUrl = fixUrlNull(this.selectFirst("div.poster img")?.attr("data-src"))
         Log.d("FIS", "Poster: $posterUrl")
@@ -100,7 +97,7 @@ class FilmIzlesene : MainAPI() {
         val tags = document.select("div.categories a").map { it.text() }
         Log.d("FIS", "tags: $tags")
         var rating =
-            document.selectFirst("div.imdb")?.text()?.replace("IMDb Puanı:","")
+            document.selectFirst("div.imdb")?.text()?.replace("IMDb Puanı:", "")
                 ?.split("/")?.first()?.trim()?.toRatingInt()
         Log.d("FIS", "rating: " + document.selectFirst("div.imdb").toString())
         var actors = document.select("div.actor a").map { it.text() }
@@ -122,7 +119,7 @@ class FilmIzlesene : MainAPI() {
                 rating = it.text().trim().split(" ").last().toRatingInt()
             }
         }
-        
+
         return newMovieLoadResponse(title, url, TvType.Movie, url) {
             this.posterUrl = poster
             this.plot = description
@@ -146,20 +143,24 @@ class FilmIzlesene : MainAPI() {
         document.select("div.sources script").forEach {
             if (it.toString().contains("#source")) {
                 val url = it.toString().substringAfter("<iframe src=\"").substringBefore("\"")
-                val doci = app.get(url,
+                val doci = app.get(
+                    url,
                     headers = mapOf(
                         "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
                         "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                         "Accept-Language" to " en-US,en;q=0.5",
-                    ), referer = "https://www.filmizlesene.pro/")
+                    ), referer = "https://www.filmizlesene.pro/"
+                )
                 var iframe = doci.document.select("iframe").attr("src")
                 if (iframe.contains("/vidmo/")) {
-                    val doci2 = app.get(iframe,
+                    val doci2 = app.get(
+                        iframe,
                         headers = mapOf(
                             "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
                             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                             "Accept-Language" to " en-US,en;q=0.5",
-                        ), referer = "https://www.filmizlesene.pro/")
+                        ), referer = "https://www.filmizlesene.pro/"
+                    )
                     var iframe2 = doci2.document.select("iframe").attr("src")
                     loadExtractor(iframe2, iframe, subtitleCallback, callback)
                 } else if (iframe.contains("/hdplayer/drive/")) {

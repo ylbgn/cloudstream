@@ -94,8 +94,6 @@ class DiziMag : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val veriler = mutableListOf<SearchResponse>()
-
         val searchReq = app.post(
             "${mainUrl}/search",
             data = mapOf(
@@ -127,7 +125,7 @@ class DiziMag : MainAPI() {
                 result?.let { results.add(it) }
             }
         }
-        return veriler
+        return results
     }
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
