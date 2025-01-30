@@ -1,4 +1,4 @@
-// ! Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+
 
 package com.nikyokki
 
@@ -34,7 +34,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
 class RoketDizi : MainAPI() {
-    override var mainUrl = "https://roketdizi.co"
+    override var mainUrl = "https://roketdizi.org"
     override var name = "RoketDizi"
     override val hasMainPage = true
     override var lang = "tr"

@@ -1,4 +1,4 @@
-// ! Bu araç @keyiflerolsun tarafından | @KekikAkademi için yazılmıştır.
+
 
 package com.nikyokki
 
@@ -59,7 +59,7 @@ class WFilmIzle : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val document = app.get("${request.data}/page/${page}").document
-        val home = document.select("div.movie-poster").mapNotNull { it.toMainPageResult() }
+        val home = document.select("div.movie-preview-content").mapNotNull { it.toMainPageResult() }
 
         return newHomePageResponse(request.name, home)
     }
@@ -78,7 +78,7 @@ class WFilmIzle : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> {
         val document = app.get("${mainUrl}/?s=${query}").document
 
-        return document.select("div.movie-poster").mapNotNull { it.toMainPageResult() }
+        return document.select("div.movie-preview-content").mapNotNull { it.toMainPageResult() }
     }
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
