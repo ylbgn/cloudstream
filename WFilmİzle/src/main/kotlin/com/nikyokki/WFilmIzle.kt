@@ -65,7 +65,7 @@ class WFilmIzle : MainAPI() {
     }
 
     private fun Element.toMainPageResult(): SearchResponse {
-        val title     = this.selectFirst("span.movie-title")?.text() ?: ""
+        val title     = this.selectFirst("span.movie-title")?.text()?.replace(" izle","")?.trim() ?: ""
         Log.d("WFI", "Title: $title")
         val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: ""
         Log.d("WFI", "Href: $href")

@@ -27,6 +27,7 @@ import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.getQualityFromName
+import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
 class HDFilmSitesi : MainAPI() {
@@ -233,6 +234,7 @@ class HDFilmSitesi : MainAPI() {
                 )
             }
         } else if (data.contains("vidlop")) {
+
             val vidUrl = app.post(
                 "https://vidlop.com/player/index.php?data=" + data.split("/").last() + "&do=getVideo",
                 headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
@@ -248,6 +250,7 @@ class HDFilmSitesi : MainAPI() {
                     isM3u8  = true
                 )
             )
+            loadExtractor(data, subtitleCallback, callback)
         }
         /*if (!data.contains(mainUrl)) {
             loadExtractor(data, "${mainUrl}/", subtitleCallback, callback)
@@ -351,6 +354,7 @@ class HDFilmSitesi : MainAPI() {
                         isM3u8  = true
                     )
                 )
+                loadExtractor(data, subtitleCallback, callback)
             }
         }
         return true
