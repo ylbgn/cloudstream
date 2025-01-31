@@ -77,34 +77,18 @@ class FilmIzlesene : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse {
-        Log.d("FIS", "LoadURL: $url")
         val document = app.get(url).document
-
         val orgTitle = document.selectFirst("div.title-border h1")?.text()?.trim() ?: ""
-        Log.d("FIS", "OrgTitle: $orgTitle")
         val altTitle = document.selectFirst("div.bolum-ismi")?.text()?.trim() ?: ""
-        Log.d("FIS", "altTitle: $altTitle")
         val title = if (altTitle.isNotEmpty()) "$orgTitle - $altTitle" else orgTitle
-        Log.d("FIS", "title: $title")
         val poster = fixUrlNull(document.selectFirst("div.film-afis img")?.attr("src"))
-        Log.d("FIS", "poster: $poster")
         val description = document.selectFirst("div#film-aciklama")?.text()?.trim()
-        Log.d("FIS", "description: $description")
-
-        var year =
-            document.selectFirst("div.release a")?.text()?.trim()?.toIntOrNull()
-        Log.d("FIS", "year: $year")
+        var year = document.selectFirst("div.release a")?.text()?.trim()?.toIntOrNull()
         val tags = document.select("div.categories a").map { it.text() }
-        Log.d("FIS", "tags: $tags")
-        var rating =
-            document.selectFirst("div.imdb")?.text()?.replace("IMDb Puanı:", "")
+        var rating = document.selectFirst("div.imdb")?.text()?.replace("IMDb Puanı:", "")
                 ?.split("/")?.first()?.trim()?.toRatingInt()
-        Log.d("FIS", "rating: " + document.selectFirst("div.imdb").toString())
         var actors = document.select("div.actor a").map { it.text() }
-        Log.d("FIS", "actors: $actors")
         val trailer = document.selectFirst("div.container iframe")?.attr("src")
-        Log.d("FIS", "trailer: $trailer")
-
         val listItems = document.select("div.list-item")
         for (item in listItems) {
             if (item.selectFirst("a")?.attr("href")?.contains("/yil/") == true) {

@@ -134,7 +134,7 @@ class YabanciDizi : MainAPI() {
         val description = document.selectFirst("div.series-summary-wrapper p")?.text()?.trim()
         val tags = mutableListOf<String>()
         document.select("div.ui.list a").forEach {
-            if (it.attr("href").contains("/oyuncu/")) {
+            if (!it.attr("href").contains("/oyuncu/")) {
                 tags.add(it.text().trim())
             }
         }
