@@ -31,7 +31,7 @@ import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
 class HDFilmSitesi : MainAPI() {
-    override var mainUrl = "https://hdfilmsitesi.net"
+    override var mainUrl = "https://hdfilmsitesi.de"
     override var name = "HDFilmSitesi"
     override val hasMainPage = true
     override var lang = "tr"
@@ -338,6 +338,7 @@ class HDFilmSitesi : MainAPI() {
                         )
                     )
                 }
+                loadExtractor(iframeLink, "$mainUrl/", subtitleCallback, callback)
             } else if (iframeLink.contains("vidlop")) {
                 val vidUrl = app.post(
                     "https://vidlop.com/player/index.php?data=" + data.split("/").last() + "&do=getVideo",

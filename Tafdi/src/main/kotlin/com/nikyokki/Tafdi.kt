@@ -34,7 +34,7 @@ class Tafdi : MainAPI() {
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        val title = this.selectFirst("div.film-ismi a")?.text() ?: ""
+        val title = this.selectFirst("div.film-ismi a")?.text()?.replace(" izle", "") ?: ""
         val href = fixUrlNull(this.selectFirst("div.film-ismi a")?.attr("href")) ?: ""
         val posterUrl = fixUrlNull(this.selectFirst("div.poster img")?.attr("data-src"))
 

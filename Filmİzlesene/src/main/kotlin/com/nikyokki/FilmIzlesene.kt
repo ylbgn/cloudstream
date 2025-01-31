@@ -84,7 +84,7 @@ class FilmIzlesene : MainAPI() {
         val poster = fixUrlNull(document.selectFirst("div.film-afis img")?.attr("src"))
         val description = document.selectFirst("div#film-aciklama")?.text()?.trim()
         var year = document.selectFirst("div.release a")?.text()?.trim()?.toIntOrNull()
-        val tags = document.select("div.categories a").map { it.text() }
+        val tags = document.select("div#listelements a").map { it.text() }
         var rating = document.selectFirst("div.imdb")?.text()?.replace("IMDb Puanı:", "")
                 ?.split("/")?.first()?.trim()?.toRatingInt()
         var actors = document.select("div.actor a").map { it.text() }
