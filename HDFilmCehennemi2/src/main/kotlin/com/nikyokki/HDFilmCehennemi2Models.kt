@@ -24,5 +24,11 @@ data class Movie(
     @JsonProperty("slug_prefix") val slugPrefix: String?
 )
 
+data class Vidload(
+    @JsonProperty("status") val status: String?,
+    @JsonProperty("image") val image: String?,
+    @JsonProperty("file") val file: String?,
+    @JsonProperty("hash") val hash: String?
+)
 
 

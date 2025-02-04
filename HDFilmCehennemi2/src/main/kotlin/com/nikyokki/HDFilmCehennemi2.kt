@@ -20,8 +20,10 @@ import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.newTvSeriesLoadResponse
+import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
@@ -33,7 +35,7 @@ class HDFilmCehennemi2 : MainAPI() {
     override val hasQuickSearch = false
     override val hasChromecastSupport = true
     override val hasDownloadSupport = true
-    override val supportedTypes = setOf(TvType.Movie)
+    override val supportedTypes = setOf(TvType.Movie, TvType.TvSeries)
 
     override val mainPage = mainPageOf(
         "${mainUrl}/tur/aile-filmleri/" to "Aile",
@@ -51,7 +53,11 @@ class HDFilmCehennemi2 : MainAPI() {
         val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: ""
         val posterUrl = fixUrlNull(this.selectFirst("div.poster-image img")?.attr("data-src"))
 
-        return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+        if (href.contains("/dizi/")) {
+            return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
+        } else {
+            return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+        }
     }
 
     private fun toSearchRes(movie: Movie): SearchResponse {
@@ -62,7 +68,7 @@ class HDFilmCehennemi2 : MainAPI() {
             return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
         } else {
             val href = fixUrlNull("$mainUrl/${movie.slugPrefix}/${movie.slug}") ?: ""
-            return newMovieSearchResponse(title, href, TvType.TvSeries) {
+            return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
                 this.posterUrl = posterUrl
             }
         }
@@ -82,7 +88,6 @@ class HDFilmCehennemi2 : MainAPI() {
         json.result.forEach {
             result.add(toSearchRes(it))
         }
-
         return result
     }
 
@@ -99,10 +104,12 @@ class HDFilmCehennemi2 : MainAPI() {
     override suspend fun load(url: String): LoadResponse {
         val document = app.get(url).document
 
-        val orgTitle = document.selectFirst("div.card-header h1")?.text()?.substringBefore(" izle", "")?.trim()
+        val orgTitle =
+            document.selectFirst("div.card-header h1")?.text()?.substringBefore(" izle", "")?.trim()
                 ?: ""
         val altTitle = document.selectFirst("div.card-header small")?.text()?.trim() ?: ""
-        val title = if (altTitle.isNotEmpty() && orgTitle != altTitle) "$orgTitle - $altTitle" else orgTitle
+        val title =
+            if (altTitle.isNotEmpty() && orgTitle != altTitle) "$orgTitle - $altTitle" else orgTitle
         val poster = fixUrlNull(document.selectFirst("picture.poster-auto img")?.attr("data-src"))
         val description = document.selectFirst("article.text-white p")?.text()?.trim()
         var year = document.selectFirst("div.release a")?.text()?.trim()?.toIntOrNull()
@@ -127,7 +134,8 @@ class HDFilmCehennemi2 : MainAPI() {
             actors.add(Actor(name = name, image = img))
         }
         val recommendations =
-            document.select("div.glide__slide.poster-container").mapNotNull { it.toRecommendationResult() }
+            document.select("div.glide__slide.poster-container")
+                .mapNotNull { it.toRecommendationResult() }
 
         if (!url.contains("/dizi/")) {
             return newMovieLoadResponse(title, url, TvType.Movie, url) {
@@ -177,8 +185,11 @@ class HDFilmCehennemi2 : MainAPI() {
         val title = this.selectFirst("h2")?.text() ?: ""
         val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: ""
         val posterUrl = fixUrlNull(this.selectFirst("picture img")?.attr("data-src"))
-
-        return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+        if (href.contains("/dizi/")) {
+            return newTvSeriesSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+        } else {
+            return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+        }
     }
 
     override suspend fun loadLinks(
@@ -190,28 +201,76 @@ class HDFilmCehennemi2 : MainAPI() {
         Log.d("HDC", "data » $data")
         val document = app.get(data).document
         Log.d("HDC", document.toString())
-        if(document.select("div.tab-content div").size > 1) {
+        if (document.select("div.tab-content div").size > 1) {
             Log.d("HDC", "Alternatif 1den fazla")
-            document.select("div.tab-content div").forEach { it ->
+            document.select("div.tab-content div").forEach {
                 it.select("a").forEach { el ->
                     val url = el.attr("href")
                     if (url == data) {
                         val iframe = document.selectFirst("iframe")?.attr("data-src") ?: ""
                         Log.d("HDC", "iframe » $iframe")
-                        loadExtractor(iframe, url, subtitleCallback, callback)
+                        if (iframe.contains("vidload")) {
+                            vidloadExtract(iframe, subtitleCallback, callback)
+                        } else {
+                            loadExtractor(iframe, url, subtitleCallback, callback)
+                        }
                     } else {
                         val doc = app.get(url).document
                         val iframe = doc.selectFirst("iframe")?.attr("data-src") ?: ""
                         Log.d("HDC", "iframe » $iframe")
-                        loadExtractor(iframe, url, subtitleCallback, callback)
+                        if (iframe.contains("vidload")) {
+                            vidloadExtract(iframe, subtitleCallback, callback)
+                        } else {
+                            loadExtractor(iframe, url, subtitleCallback, callback)
+                        }
                     }
                 }
             }
         } else {
             val iframe = document.selectFirst("iframe")?.attr("src") ?: ""
             Log.d("HDC", "iframe » $iframe")
-            loadExtractor(iframe, data, subtitleCallback, callback)
+            if (iframe.contains("vidload")) {
+                vidloadExtract(iframe, subtitleCallback, callback)
+            } else {
+                loadExtractor(iframe, data, subtitleCallback, callback)
+            }
         }
         return true
+    }
+
+    suspend fun vidloadExtract(iframe: String, subtitleCallback: (SubtitleFile) -> Unit,
+                               callback: (ExtractorLink) -> Unit) {
+        if (iframe.contains("vidload")) {
+            val url = iframe.replace("/iframe/", "/ajax/")
+            val doc = app.get(
+                url,
+                headers = mapOf(
+                    "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                    "Accept" to "*/*", "B52B04325F64A448D565566F5C151F9C" to "195.142.131.194"
+                ), referer = "https://vidload.lol/"
+            )
+                .document
+            val json = ObjectMapper().readValue(doc.body().text(), Vidload::class.java)
+            val newUrl = json.file ?: ""
+
+            val qualities = mutableListOf<String>()
+            qualities.add("360p")
+            qualities.add("480p")
+            qualities.add("720p")
+            qualities.add("1080p")
+
+            qualities.forEachIndexed { index, s ->
+                callback.invoke(
+                    ExtractorLink(
+                        source = this.name,
+                        name = "$s - Vidload",
+                        url = newUrl.replace("playlist", s),
+                        referer = "https://vidload.lol/",
+                        quality = getQualityFromName(s),
+                        isM3u8 = true
+                    )
+                )
+            }
+        }
     }
 }
