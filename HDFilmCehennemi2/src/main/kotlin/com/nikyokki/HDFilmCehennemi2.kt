@@ -99,21 +99,17 @@ class HDFilmCehennemi2 : MainAPI() {
     override suspend fun load(url: String): LoadResponse {
         val document = app.get(url).document
 
-        val orgTitle =
-            document.selectFirst("div.card-header h1")?.text()?.substringAfter(" izle", "")?.trim()
+        val orgTitle = document.selectFirst("div.card-header h1")?.text()?.substringBefore(" izle", "")?.trim()
                 ?: ""
-        val altTitle =
-            document.selectFirst("div.card-header small")?.text()?.trim() ?: ""
-        val title =
-            if (altTitle.isNotEmpty() && orgTitle != altTitle) "$orgTitle - $altTitle" else orgTitle
+        val altTitle = document.selectFirst("div.card-header small")?.text()?.trim() ?: ""
+        val title = if (altTitle.isNotEmpty() && orgTitle != altTitle) "$orgTitle - $altTitle" else orgTitle
         val poster = fixUrlNull(document.selectFirst("pictur.poster-auto img")?.attr("data-src"))
         val description = document.selectFirst("article.text-white p")?.text()?.trim()
         var year = document.selectFirst("div.release a")?.text()?.trim()?.toIntOrNull()
         val tags = document.select("div#listelements a").map { it.text() }
         val rating = document.selectFirst("div.rate")?.text().toRatingInt()
         val actors = mutableListOf<Actor>()
-        val trailer =
-            document.select("div.card-body").select("ul").first()?.select("li")?.last()
+        val trailer = document.select("div.card-body").select("ul").first()?.select("li")?.last()
                 ?.selectFirst("div")?.attr("data-trailer")
         val listItems = document.select("tbody tr").select("div")
         var duration = 0
@@ -126,7 +122,7 @@ class HDFilmCehennemi2 : MainAPI() {
                     item.selectFirst("strong")?.text()?.replace(" dakika", "")?.toIntOrNull()!!
             }
         }
-        document.select("a.story-item").forEach {
+        document.select("div.story-item-image").forEach {
             val img = fixUrlNull(it.selectFirst("img")?.attr("data-src"))
             val name = it.select("div.story-item-title").text()
             actors.add(Actor(name = name, image = img))
@@ -194,15 +190,22 @@ class HDFilmCehennemi2 : MainAPI() {
     ): Boolean {
         Log.d("HDC", "data » $data")
         val document = app.get(data).document
+        Log.d("HDC", document.toString())
         if(document.select("div.tab-content div").size > 1) {
+            Log.d("HDC", "Alternatif 1den fazla")
             document.select("div.tab-content div").forEach { it ->
                 it.select("a").forEach { el ->
                     val url = el.attr("href")
-                    Log.d("HDC", "url » $url")
-                    val doc = app.get(url).document
-                    val iframe = doc.selectFirst("iframe")?.attr("src") ?: ""
-                    Log.d("HDC", "iframe » $iframe")
-                    loadExtractor(iframe, url, subtitleCallback, callback)
+                    if (url == data) {
+                        val iframe = document.selectFirst("iframe")?.attr("data-src") ?: ""
+                        Log.d("HDC", "iframe » $iframe")
+                        loadExtractor(iframe, url, subtitleCallback, callback)
+                    } else {
+                        val doc = app.get(url).document
+                        val iframe = doc.selectFirst("iframe")?.attr("data-src") ?: ""
+                        Log.d("HDC", "iframe » $iframe")
+                        loadExtractor(iframe, url, subtitleCallback, callback)
+                    }
                 }
             }
         } else {
