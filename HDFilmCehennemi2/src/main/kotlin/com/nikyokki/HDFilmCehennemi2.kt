@@ -14,7 +14,6 @@ import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
-import com.lagradost.cloudstream3.extractors.JWPlayer
 import com.lagradost.cloudstream3.fixUrlNull
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
@@ -24,6 +23,8 @@ import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.INFER_TYPE
+import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
@@ -55,7 +56,9 @@ class HDFilmCehennemi2 : MainAPI() {
         val posterUrl = fixUrlNull(this.selectFirst("div.poster-image img")?.attr("data-src"))
 
         if (href.contains("/dizi/")) {
-            return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
+            return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+                this.posterUrl = posterUrl
+            }
         } else {
             return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
         }
@@ -187,7 +190,9 @@ class HDFilmCehennemi2 : MainAPI() {
         val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: ""
         val posterUrl = fixUrlNull(this.selectFirst("picture img")?.attr("data-src"))
         if (href.contains("/dizi/")) {
-            return newTvSeriesSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+            return newTvSeriesSearchResponse(title, href, TvType.Movie) {
+                this.posterUrl = posterUrl
+            }
         } else {
             return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
         }
@@ -213,19 +218,42 @@ class HDFilmCehennemi2 : MainAPI() {
                 it.select("a").forEach { el ->
                     val url = el.attr("href")
                     if (url == data) {
-                        val iframe = fixUrlNull(document.selectFirst("iframe")?.attr("data-src")) ?: ""
+                        val iframe =
+                            fixUrlNull(document.selectFirst("iframe")?.attr("data-src")) ?: ""
                         Log.d("HDC", "iframe » $iframe")
                         if (iframe.contains("vidload")) {
-                            vidloadExtract(iframe, subtitleCallback, callback)
+                            vidloadExtract(iframe, name, callback)
+                        } else if (iframe.contains("vidmoly")) {
+                            callback.invoke(
+                                ExtractorLink(
+                                    source = "VidMoly",
+                                    name = "VidMoly - $name",
+                                    url = iframe,
+                                    referer = "https://vidmoly.to/",
+                                    quality = Qualities.Unknown.value,
+                                    type = INFER_TYPE
+                                )
+                            )
                         } else {
                             loadExtractor(iframe, url, subtitleCallback, callback)
                         }
                     } else {
                         val doc = app.get(url).document
-                        val iframe = fixUrlNull(doc.selectFirst("iframe")?.attr("data-src"))  ?: ""
+                        val iframe = fixUrlNull(doc.selectFirst("iframe")?.attr("data-src")) ?: ""
                         Log.d("HDC", "iframe » $iframe")
                         if (iframe.contains("vidload")) {
-                            vidloadExtract(iframe, subtitleCallback, callback)
+                            vidloadExtract(iframe, name, callback)
+                        } else if (iframe.contains("vidmoly")) {
+                            callback.invoke(
+                                ExtractorLink(
+                                    source = "VidMoly",
+                                    name = "VidMoly - $name",
+                                    url = iframe,
+                                    referer = "https://vidmoly.to/",
+                                    quality = Qualities.Unknown.value,
+                                    type = INFER_TYPE
+                                )
+                            )
                         } else {
                             loadExtractor(iframe, url, subtitleCallback, callback)
                         }
@@ -233,10 +261,23 @@ class HDFilmCehennemi2 : MainAPI() {
                 }
             }
         } else {
-            val iframe = fixUrlNull(document.selectFirst("iframe")?.attr("src"))  ?: ""
+            val iframe = fixUrlNull(document.selectFirst("iframe")?.attr("src")) ?: ""
             Log.d("HDC", "iframe » $iframe")
+            val name =
+                document.selectFirst("div.card-body")?.selectFirst("li.nav-item a")?.text() ?: ""
             if (iframe.contains("vidload")) {
-                vidloadExtract(iframe, subtitleCallback, callback)
+                vidloadExtract(iframe, name, callback)
+            } else if (iframe.contains("vidmoly")) {
+                callback.invoke(
+                    ExtractorLink(
+                        source = "VidMoly",
+                        name = "VidMoly - $name",
+                        url = iframe,
+                        referer = "https://vidmoly.to/",
+                        quality = Qualities.Unknown.value,
+                        type = INFER_TYPE
+                    )
+                )
             } else {
                 loadExtractor(iframe, data, subtitleCallback, callback)
             }
@@ -244,8 +285,7 @@ class HDFilmCehennemi2 : MainAPI() {
         return true
     }
 
-    suspend fun vidloadExtract(iframe: String, subtitleCallback: (SubtitleFile) -> Unit,
-                               callback: (ExtractorLink) -> Unit) {
+    suspend fun vidloadExtract(iframe: String, name: String, callback: (ExtractorLink) -> Unit) {
         Log.d("HDC", "vidloadExtract » $iframe")
         if (iframe.contains("vidload")) {
             val url = iframe.replace("/iframe/", "/ajax/")
@@ -253,7 +293,7 @@ class HDFilmCehennemi2 : MainAPI() {
             val doc = app.get(
                 url,
                 headers = mapOf(
-                    "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                    "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
                     "Accept" to "*/*", "B52B04325F64A448D565566F5C151F9C" to "195.142.131.194"
                 ), referer = "https://vidload.lol/"
             ).document
@@ -271,7 +311,7 @@ class HDFilmCehennemi2 : MainAPI() {
                 callback.invoke(
                     ExtractorLink(
                         source = this.name,
-                        name = "$s - Vidload",
+                        name = "$s - Vidload - $name",
                         url = newUrl.replace("playlist", s),
                         referer = "https://vidload.lol/",
                         quality = getQualityFromName(s),
