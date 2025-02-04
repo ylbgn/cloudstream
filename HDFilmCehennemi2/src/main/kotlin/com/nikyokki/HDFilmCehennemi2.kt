@@ -103,7 +103,7 @@ class HDFilmCehennemi2 : MainAPI() {
             document.selectFirst("div.card-header h1")?.text()?.substringAfter(" izle", "")?.trim()
                 ?: ""
         val altTitle =
-            document.selectFirst("div.pb-2")?.text()?.replace("Orijinal Adı:", "")?.trim() ?: ""
+            document.selectFirst("div.card-header small")?.text()?.trim() ?: ""
         val title =
             if (altTitle.isNotEmpty() && orgTitle != altTitle) "$orgTitle - $altTitle" else orgTitle
         val poster = fixUrlNull(document.selectFirst("pictur.poster-auto img")?.attr("data-src"))
@@ -113,7 +113,8 @@ class HDFilmCehennemi2 : MainAPI() {
         val rating = document.selectFirst("div.rate")?.text().toRatingInt()
         val actors = mutableListOf<Actor>()
         val trailer =
-            document.select("div.card-body li").last()?.selectFirst("div")?.attr("data-trailer")
+            document.select("div.card-body").select("ul").first()?.select("li")?.last()
+                ?.selectFirst("div")?.attr("data-trailer")
         val listItems = document.select("tbody tr").select("div")
         var duration = 0
         for (item in listItems) {
@@ -133,7 +134,7 @@ class HDFilmCehennemi2 : MainAPI() {
         val recommendations =
             document.select("div.glide__slide div").mapNotNull { it.toRecommendationResult() }
 
-        if (url.contains("/dizi/")) {
+        if (!url.contains("/dizi/")) {
             return newMovieLoadResponse(title, url, TvType.Movie, url) {
                 this.posterUrl = poster
                 this.plot = description
