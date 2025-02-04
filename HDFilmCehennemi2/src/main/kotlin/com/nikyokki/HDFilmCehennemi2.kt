@@ -14,6 +14,7 @@ import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
+import com.lagradost.cloudstream3.extractors.JWPlayer
 import com.lagradost.cloudstream3.fixUrlNull
 import com.lagradost.cloudstream3.mainPageOf
 import com.lagradost.cloudstream3.newHomePageResponse
@@ -200,10 +201,15 @@ class HDFilmCehennemi2 : MainAPI() {
     ): Boolean {
         Log.d("HDC", "data » $data")
         val document = app.get(data).document
-        Log.d("HDC", document.toString())
         if (document.select("div.tab-content div").size > 1) {
             Log.d("HDC", "Alternatif 1den fazla")
             document.select("div.tab-content div").forEach {
+                var name = this.name
+                if (it.attr("id") == "videostr") {
+                    name = "Türkçe Dublaj"
+                } else if (it.attr("id") == "videosen") {
+                    name = "Türkçe Altyazılı"
+                }
                 it.select("a").forEach { el ->
                     val url = el.attr("href")
                     if (url == data) {
@@ -243,14 +249,15 @@ class HDFilmCehennemi2 : MainAPI() {
         Log.d("HDC", "vidloadExtract » $iframe")
         if (iframe.contains("vidload")) {
             val url = iframe.replace("/iframe/", "/ajax/")
+            Log.d("HDC", "vidloadExtract » $url")
             val doc = app.get(
                 url,
                 headers = mapOf(
                     "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
                     "Accept" to "*/*", "B52B04325F64A448D565566F5C151F9C" to "195.142.131.194"
                 ), referer = "https://vidload.lol/"
-            )
-                .document
+            ).document
+            Log.d("HDC", "JSON: $doc")
             val json = ObjectMapper().readValue(doc.body().text(), Vidload::class.java)
             val newUrl = json.file ?: ""
             Log.d("HDC", "vidloadExtract » $newUrl")
@@ -275,3 +282,5 @@ class HDFilmCehennemi2 : MainAPI() {
         }
     }
 }
+
+
