@@ -103,14 +103,13 @@ class HDFilmCehennemi2 : MainAPI() {
                 ?: ""
         val altTitle = document.selectFirst("div.card-header small")?.text()?.trim() ?: ""
         val title = if (altTitle.isNotEmpty() && orgTitle != altTitle) "$orgTitle - $altTitle" else orgTitle
-        val poster = fixUrlNull(document.selectFirst("pictur.poster-auto img")?.attr("data-src"))
+        val poster = fixUrlNull(document.selectFirst("picture.poster-auto img")?.attr("data-src"))
         val description = document.selectFirst("article.text-white p")?.text()?.trim()
         var year = document.selectFirst("div.release a")?.text()?.trim()?.toIntOrNull()
         val tags = document.select("div#listelements a").map { it.text() }
         val rating = document.selectFirst("div.rate")?.text().toRatingInt()
         val actors = mutableListOf<Actor>()
-        val trailer = document.select("div.card-body").select("ul").first()?.select("li")?.last()
-                ?.selectFirst("div")?.attr("data-trailer")
+        val trailer = document.selectFirst("div.nav-link")?.attr("data-trailer")
         val listItems = document.select("tbody tr").select("div")
         var duration = 0
         for (item in listItems) {
@@ -122,13 +121,13 @@ class HDFilmCehennemi2 : MainAPI() {
                     item.selectFirst("strong")?.text()?.replace(" dakika", "")?.toIntOrNull()!!
             }
         }
-        document.select("div.story-item-image").forEach {
+        document.select(".story-item").forEach {
             val img = fixUrlNull(it.selectFirst("img")?.attr("data-src"))
-            val name = it.select("div.story-item-title").text()
+            val name = it.selectFirst("div.story-item-title")?.text() ?: ""
             actors.add(Actor(name = name, image = img))
         }
         val recommendations =
-            document.select("div.glide__slide div").mapNotNull { it.toRecommendationResult() }
+            document.select("div.glide__slide.poster-container").mapNotNull { it.toRecommendationResult() }
 
         if (!url.contains("/dizi/")) {
             return newMovieLoadResponse(title, url, TvType.Movie, url) {
