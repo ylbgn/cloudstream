@@ -207,7 +207,7 @@ class HDFilmCehennemi2 : MainAPI() {
                 it.select("a").forEach { el ->
                     val url = el.attr("href")
                     if (url == data) {
-                        val iframe = document.selectFirst("iframe")?.attr("data-src") ?: ""
+                        val iframe = fixUrlNull(document.selectFirst("iframe")?.attr("data-src")) ?: ""
                         Log.d("HDC", "iframe » $iframe")
                         if (iframe.contains("vidload")) {
                             vidloadExtract(iframe, subtitleCallback, callback)
@@ -216,7 +216,7 @@ class HDFilmCehennemi2 : MainAPI() {
                         }
                     } else {
                         val doc = app.get(url).document
-                        val iframe = doc.selectFirst("iframe")?.attr("data-src") ?: ""
+                        val iframe = fixUrlNull(doc.selectFirst("iframe")?.attr("data-src"))  ?: ""
                         Log.d("HDC", "iframe » $iframe")
                         if (iframe.contains("vidload")) {
                             vidloadExtract(iframe, subtitleCallback, callback)
@@ -227,7 +227,7 @@ class HDFilmCehennemi2 : MainAPI() {
                 }
             }
         } else {
-            val iframe = document.selectFirst("iframe")?.attr("src") ?: ""
+            val iframe = fixUrlNull(document.selectFirst("iframe")?.attr("src"))  ?: ""
             Log.d("HDC", "iframe » $iframe")
             if (iframe.contains("vidload")) {
                 vidloadExtract(iframe, subtitleCallback, callback)
@@ -240,6 +240,7 @@ class HDFilmCehennemi2 : MainAPI() {
 
     suspend fun vidloadExtract(iframe: String, subtitleCallback: (SubtitleFile) -> Unit,
                                callback: (ExtractorLink) -> Unit) {
+        Log.d("HDC", "vidloadExtract » $iframe")
         if (iframe.contains("vidload")) {
             val url = iframe.replace("/iframe/", "/ajax/")
             val doc = app.get(
@@ -252,6 +253,7 @@ class HDFilmCehennemi2 : MainAPI() {
                 .document
             val json = ObjectMapper().readValue(doc.body().text(), Vidload::class.java)
             val newUrl = json.file ?: ""
+            Log.d("HDC", "vidloadExtract » $newUrl")
             val qualities = mutableListOf<String>()
             qualities.add("360p")
             qualities.add("480p")
