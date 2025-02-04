@@ -2,6 +2,7 @@ package com.nikyokki
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
+
 data class HDSearchResponse(
     @JsonProperty("result") val result: List<Movie>,
     @JsonProperty("query") val query: String?

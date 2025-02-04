@@ -252,7 +252,6 @@ class HDFilmCehennemi2 : MainAPI() {
                 .document
             val json = ObjectMapper().readValue(doc.body().text(), Vidload::class.java)
             val newUrl = json.file ?: ""
-
             val qualities = mutableListOf<String>()
             qualities.add("360p")
             qualities.add("480p")
