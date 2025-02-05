@@ -41,6 +41,20 @@ class HDFilmCehennemi2 : MainAPI() {
 
     override val mainPage = mainPageOf(
         "${mainUrl}/tur/aile-filmleri/" to "Aile",
+        "${mainUrl}/tur/aksiyon-filmleri-izle/" to "Aksiyon",
+        "${mainUrl}/tur/animasyon-film-izle/" to "Animasyon",
+        "${mainUrl}/tur/bilim-kurgu-filmleri-izle/" to "Bilim Kurgu",
+        "${mainUrl}/tur/biyografi-filmleri/" to "Biyografi",
+        "${mainUrl}/tur/dram-filmleri/" to "Dram",
+        "${mainUrl}/tur/fantastik-filmleri/" to "Fantastik",
+        "${mainUrl}/tur/gerilim-filmleri/" to "Gerilim",
+        "${mainUrl}/tur/gizem-filmleri/" to "Gizem",
+        "${mainUrl}/tur/komedi-filmleri/" to "Komedi",
+        "${mainUrl}/tur/korku-filmleri/" to "Korku",
+        "${mainUrl}/tur/macera-filmleri/" to "Macera",
+        "${mainUrl}/tur/romantik-filmleri/" to "Romantik",
+        "${mainUrl}/tur/romantik-filmleri/" to "Romantik",
+        "${mainUrl}/tur/tarih-filmleri/" to "Tarih",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -223,17 +237,6 @@ class HDFilmCehennemi2 : MainAPI() {
                         Log.d("HDC", "iframe » $iframe")
                         if (iframe.contains("vidload")) {
                             vidloadExtract(iframe, name, callback)
-                        } else if (iframe.contains("vidmoly")) {
-                            callback.invoke(
-                                ExtractorLink(
-                                    source = "VidMoly",
-                                    name = "VidMoly - $name",
-                                    url = iframe,
-                                    referer = "https://vidmoly.to/",
-                                    quality = Qualities.Unknown.value,
-                                    type = INFER_TYPE
-                                )
-                            )
                         } else {
                             loadExtractor(iframe, url, subtitleCallback, callback)
                         }
@@ -243,17 +246,6 @@ class HDFilmCehennemi2 : MainAPI() {
                         Log.d("HDC", "iframe » $iframe")
                         if (iframe.contains("vidload")) {
                             vidloadExtract(iframe, name, callback)
-                        } else if (iframe.contains("vidmoly")) {
-                            callback.invoke(
-                                ExtractorLink(
-                                    source = "VidMoly",
-                                    name = "VidMoly - $name",
-                                    url = iframe,
-                                    referer = "https://vidmoly.to/",
-                                    quality = Qualities.Unknown.value,
-                                    type = INFER_TYPE
-                                )
-                            )
                         } else {
                             loadExtractor(iframe, url, subtitleCallback, callback)
                         }
@@ -267,17 +259,6 @@ class HDFilmCehennemi2 : MainAPI() {
                 document.selectFirst("div.card-body")?.selectFirst("li.nav-item a")?.text() ?: ""
             if (iframe.contains("vidload")) {
                 vidloadExtract(iframe, name, callback)
-            } else if (iframe.contains("vidmoly")) {
-                callback.invoke(
-                    ExtractorLink(
-                        source = "VidMoly",
-                        name = "VidMoly - $name",
-                        url = iframe,
-                        referer = "https://vidmoly.to/",
-                        quality = Qualities.Unknown.value,
-                        type = INFER_TYPE
-                    )
-                )
             } else {
                 loadExtractor(iframe, data, subtitleCallback, callback)
             }
@@ -297,7 +278,6 @@ class HDFilmCehennemi2 : MainAPI() {
                     "Accept" to "*/*", "B52B04325F64A448D565566F5C151F9C" to "195.142.131.194"
                 ), referer = "https://vidload.lol/"
             ).document
-            Log.d("HDC", "JSON: $doc")
             val json = ObjectMapper().readValue(doc.body().text(), Vidload::class.java)
             val newUrl = json.file ?: ""
             Log.d("HDC", "vidloadExtract » $newUrl")
