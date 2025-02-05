@@ -1,8 +1,5 @@
-
-
 package com.nikyokki
 
-import android.util.Log
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.Episode
@@ -41,14 +38,22 @@ class HDFilmSitesi : MainAPI() {
     override val supportedTypes = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/filmizle/aile-filmleri-izle"        to "Aile",
-        "${mainUrl}/filmizle/aksiyon-filmleri-izle"     to "Aksiyon",
-        "${mainUrl}/filmizle/belgesel-filmleri-izle"    to "Belgesel",
-        "${mainUrl}/filmizle/dram-filmleri-izle"        to "Dram",
-        "${mainUrl}/filmizle/fantastik-filmler-izle"    to "Fantastik",
-        "${mainUrl}/filmizle/komedi-filmleri-hd-izle"   to "Komedi",
-        "${mainUrl}/filmizle/korku-filmleri-izle"       to "Korku",
-        "${mainUrl}/filmizle/romantik-filmler-hd-izle"  to "Romantik",
+        "${mainUrl}/filmizle/aile-filmleri-izle" to "Aile",
+        "${mainUrl}/filmizle/aksiyon-filmleri-izle" to "Aksiyon",
+        "${mainUrl}/filmizle/animasyon-filmleri-hd-izle" to "Animasyon",
+        "${mainUrl}/filmizle/bilim-kurgu-filmleri-izle" to "Bilim Kurgu",
+        "${mainUrl}/filmizle/belgesel-filmleri-izle" to "Belgesel",
+        "${mainUrl}/filmizle/dram-filmleri-izle" to "Dram",
+        "${mainUrl}/filmizle/fantastik-filmler-izle" to "Fantastik",
+        "${mainUrl}/filmizle/gerilim-filmleri-hd-izle" to "Gerilim",
+        "${mainUrl}/filmizle/gizem-filmleri-izle" to "Gizem",
+        "${mainUrl}/filmizle/komedi-filmleri-hd-izle" to "Komedi",
+        "${mainUrl}/filmizle/korku-filmleri-izle" to "Korku",
+        "${mainUrl}/filmizle/macera-filmleri-izle" to "Macera",
+        "${mainUrl}/filmizle/romantik-filmler-hd-izle" to "Romantik",
+        "${mainUrl}/filmizle/savas-filmleri-izle" to "Savaş",
+        "${mainUrl}/filmizle/suc-filmleri-izle" to "Suç",
+        "${mainUrl}/filmizle/western-filmler-hd-izle-2" to "Western",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -236,27 +241,23 @@ class HDFilmSitesi : MainAPI() {
         } else if (data.contains("vidlop")) {
 
             val vidUrl = app.post(
-                "https://vidlop.com/player/index.php?data=" + data.split("/").last() + "&do=getVideo",
+                "https://vidlop.com/player/index.php?data=" + data.split("/")
+                    .last() + "&do=getVideo",
                 headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
                 referer = "${mainUrl}/"
             ).parsedSafe<VidLop>()?.securedLink ?: return false
             callback.invoke(
                 ExtractorLink(
-                    source  = this.name,
-                    name    = this.name,
-                    url     = vidUrl,
+                    source = this.name,
+                    name = this.name,
+                    url = vidUrl,
                     referer = data,
                     quality = Qualities.Unknown.value,
-                    isM3u8  = true
+                    isM3u8 = true
                 )
             )
             loadExtractor(data, subtitleCallback, callback)
         }
-        /*if (!data.contains(mainUrl)) {
-            loadExtractor(data, "${mainUrl}/", subtitleCallback, callback)
-            return true
-        }*/
-
         val document = app.get(data).document
         val iframeSkici = IframeKodlayici()
         val pdataMatches = Regex("""pdata\[\'(.*?)'\] = \'(.*?)\';""").findAll(document.html())
@@ -341,18 +342,19 @@ class HDFilmSitesi : MainAPI() {
                 loadExtractor(iframeLink, "$mainUrl/", subtitleCallback, callback)
             } else if (iframeLink.contains("vidlop")) {
                 val vidUrl = app.post(
-                    "https://vidlop.com/player/index.php?data=" + data.split("/").last() + "&do=getVideo",
+                    "https://vidlop.com/player/index.php?data=" + data.split("/")
+                        .last() + "&do=getVideo",
                     headers = mapOf("X-Requested-With" to "XMLHttpRequest"),
                     referer = "${mainUrl}/"
                 ).parsedSafe<VidLop>()?.securedLink ?: return false
                 callback.invoke(
                     ExtractorLink(
-                        source  = this.name,
-                        name    = this.name,
-                        url     = vidUrl,
+                        source = this.name,
+                        name = this.name,
+                        url = vidUrl,
                         referer = data,
                         quality = Qualities.Unknown.value,
-                        isM3u8  = true
+                        isM3u8 = true
                     )
                 )
                 loadExtractor(data, subtitleCallback, callback)
@@ -362,7 +364,7 @@ class HDFilmSitesi : MainAPI() {
     }
 
     data class VidLop(
-        @JsonProperty("hls")         val hls: Boolean?        = null,
+        @JsonProperty("hls") val hls: Boolean? = null,
         @JsonProperty("securedLink") val securedLink: String? = null
     )
 }

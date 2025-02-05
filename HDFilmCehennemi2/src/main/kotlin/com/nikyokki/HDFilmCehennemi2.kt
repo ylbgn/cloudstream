@@ -165,7 +165,7 @@ class HDFilmCehennemi2 : MainAPI() {
                 this.duration = duration
                 this.recommendations = recommendations
                 addActors(actors)
-                addTrailer(trailer)
+                addTrailer("https://www.youtube.com/embed/$trailer")
             }
         } else {
             val episodes = mutableListOf<Episode>()
