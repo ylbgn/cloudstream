@@ -56,6 +56,9 @@ open class VidRameExtractor : ExtractorApi() {
         Log.d("VidEx", url)
         val script = app.get(
             url,
+            headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
+                "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language" to "en-US,en;q=0.5"),
             referer = mainUrl
         ).document.select("script").find { it.data().contains("sources:") }?.data() ?: ""
 
