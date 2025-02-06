@@ -54,13 +54,18 @@ open class VidRameExtractor : ExtractorApi() {
         callback: (ExtractorLink) -> Unit
     ) {
         Log.d("VidEx", url)
-        val script = app.get(
+        val document = app.get(
             url,
             headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
                 "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                 "Accept-Language" to "en-US,en;q=0.5"),
             referer = referer
-        ).document.select("script").find { it.data().contains("sources:") }?.data() ?: ""
+        ).document
+        Log.d("VidEx", "Document: $document")
+
+        val script = document.select("script").find { it.data().contains("sources:") }?.data() ?: ""
+        Log.d("VidEx", "Script: $script")
+
 
         val regex = """("file": )EE\.dd\(".*?"\)""".toRegex()
         val videoData = script.substringAfter("sources: [")
@@ -74,44 +79,35 @@ open class VidRameExtractor : ExtractorApi() {
         val subData =
             script.substringAfter("configs.tracks = ").substringBefore(";").addMarks("file")
                 .addMarks("label").addMarks("kind")
-
         val objectMapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
         val captions: List<SubSource>? = subData.let { objectMapper.readValue(it) }
         if (captions != null) {
-            for (cap in captions) {
-                subtitleCallback.invoke(
-                    SubtitleFile(
-                        lang = cap.label.toString(),
-                        url = fixUrl(cap.file.toString())
+            tryParseJson<List<SubSource>>(subData)
+                ?.filter { it.kind == "captions" }?.map {
+                    subtitleCallback.invoke(
+                        SubtitleFile(
+                            it.label.toString(),
+                            fixUrl(it.file.toString())
+                        )
                     )
-                )
-            }
+                }
         }
-        tryParseJson<List<SubSource>>(subData)
-            ?.filter { it.kind == "captions" }?.map {
-                subtitleCallback.invoke(
-                    SubtitleFile(
-                        it.label.toString(),
-                        fixUrl(it.file.toString())
-                    )
-                )
+        tryParseJson<Source>(output)?.file?.let { m3uLink ->
+            var video = m3uLink?.substringAfter(".dd(")?.substringBefore(")")
+            video = video?.replace("-", "+")?.replace("_", "/")
+            while (video!!.length % 4 != 0) {
+                video += "="
             }
-        val videos = output.let { objectMapper.readValue<Source>(it).file }
-        println(videos)
-        var video = videos?.substringAfter(".dd(")?.substringBefore(")")
-        video = video?.replace("-", "+")?.replace("_", "/")
-        while (video!!.length % 4 != 0) {
-            video += "="
+            val a = String(Base64.decode(video, Base64.DEFAULT))
+            val b = rr(a)
+            val sonm3uLink = rs(b)
+            Log.d("VidEx", m3uLink)
+            M3u8Helper.generateM3u8(
+                name,
+                sonm3uLink,
+                "$mainUrl/"
+            )
         }
-        val a = String(Base64.decode(video, Base64.DEFAULT))
-        val b = rr(a)
-        val m3uLink = rs(b)
-        Log.d("VidEx", m3uLink)
-        M3u8Helper.generateM3u8(
-            name,
-            m3uLink,
-            "$mainUrl/"
-        )
     }
 }
 
