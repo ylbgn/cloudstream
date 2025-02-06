@@ -81,7 +81,7 @@ class DiziGom : MainAPI() {
         val title = document.selectFirst("div.serieTitle h1")?.text()?.trim() ?: return null
         val poster = fixUrlNull(
             document.selectFirst("div.seriePoster")?.attr("style")
-                ?.substringAfter("background-image:url(\"")?.substringBefore("\")")
+                ?.substringAfter("background-image:url(")?.substringBefore(")")
         )
         Log.d("DZG", "Poster: $poster")
         val description = document.selectFirst("div.serieDescription p")?.text()?.trim()
