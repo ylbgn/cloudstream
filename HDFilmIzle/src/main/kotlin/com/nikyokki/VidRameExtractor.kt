@@ -101,12 +101,12 @@ open class VidRameExtractor : ExtractorApi() {
             val a = String(Base64.decode(video, Base64.DEFAULT))
             val b = rr(a)
             val sonm3uLink = rs(b)
-            Log.d("VidEx", m3uLink)
+            Log.d("VidEx", "SonM3u : $sonm3uLink")
             M3u8Helper.generateM3u8(
                 name,
                 sonm3uLink,
                 "$mainUrl/"
-            )
+            ).forEach(callback)
         }
     }
 }
