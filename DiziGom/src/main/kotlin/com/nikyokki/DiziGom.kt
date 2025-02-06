@@ -83,6 +83,7 @@ class DiziGom : MainAPI() {
             document.selectFirst("div.seriePoster")?.attr("style")
                 ?.substringAfter("background-image:url(\"")?.substringBefore("\")")
         )
+        Log.d("DZG", "Poster: $poster")
         val description = document.selectFirst("div.serieDescription p")?.text()?.trim()
         val year = document.selectFirst("div.airDateYear a")?.text()?.trim()?.toIntOrNull()
         val tags = document.select("div.genreList a").map { it.text() }
@@ -118,6 +119,7 @@ class DiziGom : MainAPI() {
             this.year = year
             this.plot = description
             this.tags = tags
+            this.duration = duration
             this.rating = rating
             addActors(actors)
         }
@@ -140,8 +142,10 @@ class DiziGom : MainAPI() {
     ): Boolean {
         Log.d("DZG", "data » ${data}")
         val document = app.get(data, referer = "$mainUrl/").document
+        val iframe = document.selectFirst("iframe")?.attr("src") ?: ""
+        val iframeDocument = app.get(iframe, referer = "$mainUrl/").document
         val script =
-            document.select("script").find { it.data().contains("eval(function(p,a,c,k,e") }?.data()
+            iframeDocument.select("script").find { it.data().contains("eval(function(p,a,c,k,e") }?.data()
                 ?: ""
         val unpack = JsUnpacker(script).unpack()
         val sourceJ = unpack?.substringAfter("sources:[")?.substringBefore("]")?.replace("\\/", "/")
