@@ -21,6 +21,7 @@ import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
@@ -178,6 +179,21 @@ class WFilmIzle : MainAPI() {
                         "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8"
                     ),
                     quality = getQualityFromName("1080p"),
+                    isM3u8 = true
+                )
+            )
+            callback.invoke(
+                ExtractorLink(
+                    source = name,
+                    name = name,
+                    url = master,
+                    referer = mainUrl,
+                    headers = mapOf(
+                        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox",
+                        "Accept" to "*/*", "X-Requested-With" to "XMLHttpRequest",
+                        "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8"
+                    ),
+                    quality = Qualities.Unknown.value,
                     isM3u8 = true
                 )
             )

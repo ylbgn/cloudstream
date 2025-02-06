@@ -268,6 +268,17 @@ class DiziMag : MainAPI() {
                             isM3u8 = true
                         )
                     )
+                    callback.invoke(
+                        ExtractorLink(
+                            source = this.name,
+                            name = this.name,
+                            headers = mapOf("Accept" to "*/*", "Referer" to iframe),
+                            url = jsonData.videoLocation,
+                            referer = iframe,
+                            quality = Qualities.Unknown.value,
+                            isM3u8 = true
+                        )
+                    )
                 }
             }
         }
