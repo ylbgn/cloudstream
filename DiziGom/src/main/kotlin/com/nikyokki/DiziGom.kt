@@ -143,6 +143,7 @@ class DiziGom : MainAPI() {
         Log.d("DZG", "data » ${data}")
         val document = app.get(data, referer = "$mainUrl/").document
         val iframe = document.selectFirst("iframe")?.attr("src") ?: ""
+        Log.d("DZG","iframe » $iframe" )
         val iframeDocument = app.get(iframe, referer = "$mainUrl/").document
         val script =
             iframeDocument.select("script").find { it.data().contains("eval(function(p,a,c,k,e") }?.data()
