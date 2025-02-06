@@ -140,18 +140,20 @@ class DiziGom : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
+        val objectMapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
         Log.d("DZG", "data » ${data}")
         val document = app.get(data, referer = "$mainUrl/").document
-        val iframe = document.selectFirst("iframe")?.attr("src") ?: ""
-        Log.d("DZG","iframe » $iframe" )
-        val iframeDocument = app.get(iframe, referer = "$mainUrl/").document
+        val embed = document.body().selectFirst("script")?.data()
+        val contentJson: Gof = objectMapper.readValue(embed!!)
+        Log.d("DZG","iframe » ${contentJson.contentUrl}" )
+        val iframeDocument = app.get(contentJson.contentUrl, referer = "$mainUrl/").document
         val script =
             iframeDocument.select("script").find { it.data().contains("eval(function(p,a,c,k,e") }?.data()
                 ?: ""
         val unpack = JsUnpacker(script).unpack()
         val sourceJ = unpack?.substringAfter("sources:[")?.substringBefore("]")?.replace("\\/", "/")
         Log.d("DZG", "sourceJ » ${sourceJ}")
-        val objectMapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
+
         val source: Go = objectMapper.readValue(sourceJ!!)
         callback.invoke(
             ExtractorLink(
@@ -171,5 +173,19 @@ class DiziGom : MainAPI() {
         @JsonProperty("file") val file: String,
         @JsonProperty("label") val label: String,
         @JsonProperty("type") val type: String
+    )
+    data class Gof(
+        @JsonProperty("@context") val context: String,
+        @JsonProperty("@type") val type: String,
+        @JsonProperty("position") val position: String,
+        @JsonProperty("name") val name: String,
+        @JsonProperty("description") val description: String,
+        @JsonProperty("thumbnailUrl") val thumbnailUrl: String,
+        @JsonProperty("uploadDate") val uploadDate: String,
+        @JsonProperty("duration") val duration: String,
+        @JsonProperty("contentUrl") val contentUrl: String,
+        @JsonProperty("timeRequired") val timeRequired: String,
+        @JsonProperty("embedUrl") val embedUrl: String,
+        @JsonProperty("interactionCount") val interactionCount: String,
     )
 }
