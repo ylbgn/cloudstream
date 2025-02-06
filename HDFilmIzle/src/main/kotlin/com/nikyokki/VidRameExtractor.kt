@@ -12,6 +12,7 @@ import com.lagradost.cloudstream3.utils.AppUtils.tryParseJson
 import com.lagradost.cloudstream3.utils.ExtractorApi
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.M3u8Helper
+import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.fixUrl
 
 
@@ -102,11 +103,21 @@ open class VidRameExtractor : ExtractorApi() {
             val b = rr(a)
             val sonm3uLink = rs(b)
             Log.d("VidEx", "SonM3u : $sonm3uLink")
-            M3u8Helper.generateM3u8(
+            callback.invoke(
+                ExtractorLink(
+                    source = this.name,
+                    name = this.name,
+                    url = sonm3uLink,
+                    referer = "$mainUrl/",
+                    quality = Qualities.Unknown.value,
+                    isM3u8 = true
+                )
+            )
+            /*M3u8Helper.generateM3u8(
                 name,
                 sonm3uLink,
                 "$mainUrl/"
-            ).forEach(callback)
+            ).forEach(callback)*/
         }
     }
 }
