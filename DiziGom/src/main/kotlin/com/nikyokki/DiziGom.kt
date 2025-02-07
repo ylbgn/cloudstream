@@ -59,10 +59,32 @@ class DiziGom : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+        val search = "/wp-admin/admin-ajax.php"
         val document = app.get("${request.data}/#p=$page").document
-        val home = document.select("div.episode-box").mapNotNull { it.toMainPageResult() }
+        val tax = document.selectFirst("form.dizigom_advenced_search input")?.attr("name")
+        val value = document.selectFirst("form.dizigom_advenced_search input")?.attr("value")
+        if (page > 1) {
+            val pagedoc = app.post(
+                mainUrl + search, cookies = mapOf(
+                    "X-Requested-With" to "XMLHttpRequest",
+                    "Referer" to request.data
+                ),
+                data = mapOf(
+                    "action" to "dizigom_search_action",
+                    "formData" to "$tax=$value",
+                    "paged" to "$page",
+                    "_wpnonce" to "18a90a7287"
+                )
+            ).document
+            val home = pagedoc.select("div.episode-box").mapNotNull { it.toMainPageResult() }
+            return newHomePageResponse(request.name, home)
+        } else {
+            val home = document.select("div.episode-box").mapNotNull { it.toMainPageResult() }
+            return newHomePageResponse(request.name, home)
+        }
 
-        return newHomePageResponse(request.name, home)
+
+
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
@@ -86,7 +108,9 @@ class DiziGom : MainAPI() {
         val href = fixUrlNull(this.selectFirst("div.categorytitle a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
 
-        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
+        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+            this.posterUrl = posterUrl
+        }
     }
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
@@ -162,10 +186,14 @@ class DiziGom : MainAPI() {
         val document = app.get(data, referer = "$mainUrl/").document
         val embed = document.body().selectFirst("script")?.data()
         val contentJson: Gof = objectMapper.readValue(embed!!)
-        Log.d("DZG","iframe » ${contentJson.contentUrl}" )
-        val iframeDocument = app.get(contentJson.contentUrl.replace("https://","https://play."), referer = "$mainUrl/").document
+        Log.d("DZG", "iframe » ${contentJson.contentUrl}")
+        val iframeDocument = app.get(
+            contentJson.contentUrl.replace("https://", "https://play."),
+            referer = "$mainUrl/"
+        ).document
         val script =
-            iframeDocument.select("script").find { it.data().contains("eval(function(p,a,c,k,e") }?.data()
+            iframeDocument.select("script").find { it.data().contains("eval(function(p,a,c,k,e") }
+                ?.data()
                 ?: ""
         val unpack = JsUnpacker(script).unpack()
         val sourceJ = unpack?.substringAfter("sources:[")?.substringBefore("]")?.replace("\\/", "/")
@@ -191,6 +219,7 @@ class DiziGom : MainAPI() {
         @JsonProperty("label") val label: String,
         @JsonProperty("type") val type: String
     )
+
     data class Gof(
         @JsonProperty("@context") val context: String,
         @JsonProperty("@type") val type: String,
