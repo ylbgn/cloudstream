@@ -274,7 +274,7 @@ class HDFilmSitesi : MainAPI() {
                     .substringAfter("var id =").substringBefore(";")
                     .replace("'", "").trim()
                 val m3uLink = "https://vidmody.com/vs/$bb"
-                val m3uicerik = app.get(m3uLink, referer = mainUrl).text
+                /*val m3uicerik = app.get(m3uLink, referer = mainUrl).text
                 val audioRegex = Regex(
                     "#EXT-X-MEDIA:TYPE=AUDIO,.*NAME=\"(.*?)\".*URI=\"(.*?)\"",
                     RegexOption.MULTILINE
@@ -338,17 +338,18 @@ class HDFilmSitesi : MainAPI() {
                             isM3u8 = true
                         )
                     )
-                    callback.invoke(
-                        ExtractorLink(
-                            source = this.name,
-                            name = "$resolution - $name2",
-                            url = m3uLink,
-                            referer = "$mainUrl/",
-                            quality = getQualityFromName("4k"),
-                            isM3u8 = true
-                        )
+
+                }*/
+                callback.invoke(
+                    ExtractorLink(
+                        source = this.name,
+                        name = this.name,
+                        url = m3uLink,
+                        referer = "$mainUrl/",
+                        quality = getQualityFromName("4k"),
+                        isM3u8 = true
                     )
-                }
+                )
                 loadExtractor(iframeLink, "$mainUrl/", subtitleCallback, callback)
             } else if (iframeLink.contains("vidlop")) {
                 val vidUrl = app.post(

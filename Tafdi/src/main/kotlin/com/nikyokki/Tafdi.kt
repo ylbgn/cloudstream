@@ -37,8 +37,8 @@ class Tafdi : MainAPI() {
         "${mainUrl}/category/psikolojik-filmler/" to "Psikolojik",
         "${mainUrl}/category/romantik-filmler/" to "Romantik",
         "${mainUrl}/category/savas-filmleri/" to "Savaş",
-        "${mainUrl}/category/suç-filmleri/" to "Suç",
-        "${mainUrl}/category/Tarih-filmleri/" to "Tarih",
+        "${mainUrl}/category/suc-filmleri/" to "Suç",
+        "${mainUrl}/category/tarih-filmleri/" to "Tarih",
         "${mainUrl}/category/western-filmler/" to "Western",
         "${mainUrl}/category/yerli-filmler/" to "Yerli",
 

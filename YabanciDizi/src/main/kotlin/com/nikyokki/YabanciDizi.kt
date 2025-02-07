@@ -23,6 +23,7 @@ import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.Jsoup
@@ -226,6 +227,20 @@ class YabanciDizi : MainAPI() {
                     Regex("""file: '(.*)',""").find(decryptedDoc.html())?.groupValues?.get(1)
                         ?: ""
                 Log.d("YBD", vidUrl)
+                callback.invoke(
+                    ExtractorLink(
+                        source = name,
+                        name = name,
+                        url = vidUrl,
+                        referer = mainUrl,
+                        headers = mapOf(
+                            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                            "Referer" to mainUrl
+                        ),
+                        quality = Qualities.Unknown.value,
+                        isM3u8 = true
+                    )
+                )
                 val aa = app.get(
                     vidUrl, referer = "$mainUrl/", headers =
                     mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")

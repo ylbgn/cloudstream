@@ -46,7 +46,7 @@ class FilmIzlesene : MainAPI() {
         "${mainUrl}/kategori/turler/macera-aksiyon-izle" to "Macera-Aksiyon",
         "${mainUrl}/kategori/turler/polisiye-suc-izle" to "Polisiye-Suç",
         "${mainUrl}/kategori/turler/romantik-duygusal-izle" to "Romantik",
-        "${mainUrl}/kategori/turler/sava-filmleri-izle-2" to "Savaş",
+        "${mainUrl}/kategori/turler/savas-filmleri-izle-2" to "Savaş",
         "${mainUrl}/kategori/turler/tarih-filmleri-izle-1" to "Tarih",
         "${mainUrl}/kategori/turler/western-izle" to "Western",
     )

@@ -42,8 +42,8 @@ class WFilmIzle : MainAPI() {
         "${mainUrl}/filmizle/animasyon-filmleri-izle/"           to "Animasyon",
         "${mainUrl}/filmizle/belgesel-filmleri-izle/"            to "Belgesel",
         "${mainUrl}/filmizle/bilim-kurgu-filmleri-izle/"         to "Bilim Kurgu",
-        "${mainUrl}/filmizle/dram-filmleri-izle/"                to "Dram",
-        "${mainUrl}/filmizle/fantastik-filmler-izle/"            to "Fantastik",
+        "${mainUrl}/filmizle/draam-filmleri-izle/"                to "Dram",
+        "${mainUrl}/filmizle/fantaastik-filmler-izle/"            to "Fantastik",
         "${mainUrl}/filmizle/gerilimm-filmleri-izle/"            to "Gerilim",
         "${mainUrl}/filmizle/gizem-filmleri-izle/"               to "Gizem",
         "${mainUrl}/filmizle/komedi-filmleri-izle-hd/"           to "Komedi",
@@ -138,7 +138,12 @@ class WFilmIzle : MainAPI() {
             )).document
         val iframe   = fixUrlNull(document.select("div#vast iframe").last()?.attr("src") ?: "")
         Log.d("WFI", "iframe » $iframe")
-        val hash = iframe?.split("/")?.last()
+        var hash = ""
+        if (iframe?.contains("/player/") == true) {
+             hash = iframe.substringAfter("data=") ?: ""
+        } else {
+             hash = iframe?.split("/")?.last() ?: ""
+        }
         Log.d("WFI", "hash » $hash")
         if (iframe?.contains("hdplayersystem") == true) {
             val json = app.post("https://hdplayersystem.live/player/index.php?data=$hash&do=getVideo", headers =
@@ -157,31 +162,6 @@ class WFilmIzle : MainAPI() {
             val updatedVideoData = jsonData.copy(ck = decodedCK)
             val master = updatedVideoData.videoSource ?: ""
             Log.d("WFI", "Master: $master")
-            val son = app.get(
-                master, headers = mapOf(
-                    "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox",
-                    "Accept" to "*/*", "X-Requested-With" to "XMLHttpRequest",
-                    "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8"
-                )
-            ).document.body().text()
-            Log.d("WFI", son)
-            val m3uUrl = son.split(" ").last()
-            Log.d("WFI", m3uUrl)
-            callback.invoke(
-                ExtractorLink(
-                    source = name,
-                    name = name,
-                    url = m3uUrl,
-                    referer = mainUrl,
-                    headers = mapOf(
-                        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox",
-                        "Accept" to "*/*", "X-Requested-With" to "XMLHttpRequest",
-                        "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8"
-                    ),
-                    quality = getQualityFromName("1080p"),
-                    isM3u8 = true
-                )
-            )
             callback.invoke(
                 ExtractorLink(
                     source = name,

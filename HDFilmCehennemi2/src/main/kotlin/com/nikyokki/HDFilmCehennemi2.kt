@@ -52,7 +52,7 @@ class HDFilmCehennemi2 : MainAPI() {
         "${mainUrl}/tur/komedi-filmleri/" to "Komedi",
         "${mainUrl}/tur/korku-filmleri/" to "Korku",
         "${mainUrl}/tur/macera-filmleri/" to "Macera",
-        "${mainUrl}/tur/romantik-filmleri/" to "Romantik",
+        "${mainUrl}/tur/romantik-filmler/" to "Romantik",
         "${mainUrl}/tur/savas-filmleri/" to "Savaş",
         "${mainUrl}/tur/suc-filmleri/" to "Suç",
         "${mainUrl}/tur/tarih-filmleri/" to "Tarih",
@@ -254,7 +254,8 @@ class HDFilmCehennemi2 : MainAPI() {
                 }
             }
         } else {
-            val iframe = fixUrlNull(document.selectFirst("iframe")?.attr("src")) ?: ""
+            Log.d("HDC", "Tek alternatif var")
+            val iframe = fixUrlNull(document.selectFirst("iframe")?.attr("data-src")) ?: ""
             Log.d("HDC", "iframe » $iframe")
             val name =
                 document.selectFirst("div.card-body")?.selectFirst("li.nav-item a")?.text() ?: ""
