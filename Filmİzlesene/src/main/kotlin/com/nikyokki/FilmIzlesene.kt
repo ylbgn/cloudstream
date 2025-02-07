@@ -48,6 +48,7 @@ class FilmIzlesene : MainAPI() {
         "${mainUrl}/kategori/turler/romantik-duygusal-izle" to "Romantik",
         "${mainUrl}/kategori/turler/sava-filmleri-izle-2" to "Savaş",
         "${mainUrl}/kategori/turler/tarih-filmleri-izle-1" to "Tarih",
+        "${mainUrl}/kategori/turler/western-izle" to "Western",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {

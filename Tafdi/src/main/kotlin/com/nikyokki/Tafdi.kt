@@ -23,7 +23,26 @@ class Tafdi : MainAPI() {
         "${mainUrl}/category/aile-filmleri/"      to "Aile",
         "${mainUrl}/category/aksiyon-filmleri/"   to "Aksiyon",
         "${mainUrl}/category/animasyon-filmleri/" to "Animasyon",
-        "${mainUrl}/category/belgeseller/"  to "Belgesel"
+        "${mainUrl}/category/belgeseller/"  to "Belgesel",
+        "${mainUrl}/category/bilim-kurgu-filmleri/" to "Bilim Kurgu",
+        "${mainUrl}/category/biyografi-filmleri/" to "Biyografi",
+        "${mainUrl}/category/dram-filmleri/" to "Dran",
+        "${mainUrl}/category/fantastik-filmler/" to "Fantastik",
+        "${mainUrl}/category/gerilim-filmleri/" to "Gerilim",
+        "${mainUrl}/category/gizem-filmleri/" to "Gizem",
+        "${mainUrl}/category/komedi-filmleri/" to "Komedi",
+        "${mainUrl}/category/korku-filmleri/" to "Korku",
+        "${mainUrl}/category/macera-filmleri/" to "Macera",
+        "${mainUrl}/category/polisiye-filmleri/" to "Polisiye",
+        "${mainUrl}/category/psikolojik-filmler/" to "Psikolojik",
+        "${mainUrl}/category/romantik-filmler/" to "Romantik",
+        "${mainUrl}/category/savas-filmleri/" to "Savaş",
+        "${mainUrl}/category/suç-filmleri/" to "Suç",
+        "${mainUrl}/category/Tarih-filmleri/" to "Tarih",
+        "${mainUrl}/category/western-filmler/" to "Western",
+        "${mainUrl}/category/yerli-filmler/" to "Yerli",
+
+
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {

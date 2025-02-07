@@ -41,6 +41,21 @@ class DiziGom : MainAPI() {
 
     override val mainPage = mainPageOf(
         "${mainUrl}/tur/aile/" to "Aile",
+        "${mainUrl}/tur/aksiyon/" to "Aksiyon",
+        "${mainUrl}/tur/animasyon/" to "Animasyon",
+        "${mainUrl}/tur/belgesel/" to "Belgesel",
+        "${mainUrl}/tur/bilim-kurgu/" to "Bilim Kurgu",
+        "${mainUrl}/tur/dram/" to "Dram",
+        "${mainUrl}/tur/fantastik/" to "Fantastik",
+        "${mainUrl}/tur/gerilim/" to "Gerilim",
+        "${mainUrl}/tur/komedi/" to "Komedi",
+        "${mainUrl}/tur/korku/" to "Korku",
+        "${mainUrl}/tur/macera/" to "Macera",
+        "${mainUrl}/tur/polisiye/" to "Polisiye",
+        "${mainUrl}/tur/romantik/" to "Romantik",
+        "${mainUrl}/tur/savas/" to "Savaş",
+        "${mainUrl}/tur/suc/" to "Suç",
+        "${mainUrl}/tur/tarih/" to "Tarih",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -63,15 +78,15 @@ class DiziGom : MainAPI() {
     override suspend fun search(query: String): List<SearchResponse> {
         val document = app.get("${mainUrl}/?s=${query}").document
 
-        return document.select("div.result-item article").mapNotNull { it.toSearchResult() }
+        return document.select("div.single-item").mapNotNull { it.toSearchResult() }
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val title = this.selectFirst("div.title a")?.text() ?: return null
-        val href = fixUrlNull(this.selectFirst("div.title a")?.attr("href")) ?: return null
+        val title = this.selectFirst("div.categorytitle a")?.text() ?: return null
+        val href = fixUrlNull(this.selectFirst("div.categorytitle a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
 
-        return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) { this.posterUrl = posterUrl }
     }
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)

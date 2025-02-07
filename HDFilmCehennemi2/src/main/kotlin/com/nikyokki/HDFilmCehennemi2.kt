@@ -53,7 +53,8 @@ class HDFilmCehennemi2 : MainAPI() {
         "${mainUrl}/tur/korku-filmleri/" to "Korku",
         "${mainUrl}/tur/macera-filmleri/" to "Macera",
         "${mainUrl}/tur/romantik-filmleri/" to "Romantik",
-        "${mainUrl}/tur/romantik-filmleri/" to "Romantik",
+        "${mainUrl}/tur/savas-filmleri/" to "Savaş",
+        "${mainUrl}/tur/suc-filmleri/" to "Suç",
         "${mainUrl}/tur/tarih-filmleri/" to "Tarih",
     )
 
