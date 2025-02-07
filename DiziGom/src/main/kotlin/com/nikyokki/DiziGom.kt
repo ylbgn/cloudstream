@@ -1,4 +1,4 @@
-package com.keyiflerolsun
+package com.nikyokki
 
 import android.util.Log
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -30,7 +30,7 @@ import com.lagradost.cloudstream3.utils.getQualityFromName
 import org.jsoup.nodes.Element
 
 class DiziGom : MainAPI() {
-    override var mainUrl = "https://dizigom1.co/"
+    override var mainUrl = "https://dizigom1.co"
     override var name = "DiziGom"
     override val hasMainPage = true
     override var lang = "tr"
@@ -148,7 +148,7 @@ class DiziGom : MainAPI() {
         val embed = document.body().selectFirst("script")?.data()
         val contentJson: Gof = objectMapper.readValue(embed!!)
         Log.d("DZG","iframe » ${contentJson.contentUrl}" )
-        val iframeDocument = app.get(contentJson.contentUrl, referer = "$mainUrl/").document
+        val iframeDocument = app.get(contentJson.contentUrl.replace("https://","https://play."), referer = "$mainUrl/").document
         val script =
             iframeDocument.select("script").find { it.data().contains("eval(function(p,a,c,k,e") }?.data()
                 ?: ""
