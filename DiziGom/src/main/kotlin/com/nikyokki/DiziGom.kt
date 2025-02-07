@@ -2,6 +2,7 @@ package com.keyiflerolsun
 
 import android.util.Log
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -141,6 +142,7 @@ class DiziGom : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         val objectMapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Log.d("DZG", "data » ${data}")
         val document = app.get(data, referer = "$mainUrl/").document
         val embed = document.body().selectFirst("script")?.data()
