@@ -22,16 +22,16 @@ class FullHDFilmIzlede : MainAPI() {
     override val supportedTypes       = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/kategori/aksiyon-filmleri-izle/"      to "Aksiyon",
-        "${mainUrl}/kategori/belgesel-izle/"   to "Belgesel",
-        "${mainUrl}/kategori/bilim-kurgu-filmleri-izle/" to "Bilim Kurgu",
-        "${mainUrl}/kategori/macera-filmleri-izle/"  to "Macera"
+        "${mainUrl}/kategori/aksiyon-filmleri-izle"      to "Aksiyon",
+        "${mainUrl}/kategori/belgesel-izle"   to "Belgesel",
+        "${mainUrl}/kategori/bilim-kurgu-filmleri-izle" to "Bilim Kurgu",
+        "${mainUrl}/kategori/macera-filmleri-izle"  to "Macera"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         var url = request.data
         if (page != 1) {
-            url += "sayfa=$page\""
+            url += "/sayfa=$page\""
         }
         val document = app.get(url).document
         val home     = document.select("li.movie").mapNotNull { it.toMainPageResult() }
