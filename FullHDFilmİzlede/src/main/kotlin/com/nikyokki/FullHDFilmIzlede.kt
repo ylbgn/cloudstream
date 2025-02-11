@@ -69,12 +69,12 @@ class FullHDFilmIzlede : MainAPI() {
         val title           = document.selectFirst("div.movieBar h2")?.text()?.replace(" izle", "")?.trim() ?: "title"
         val poster          = fixUrlNull(document.selectFirst("div.moviePoster img")?.attr("src"))
         val description     = document.selectFirst("div.movieDescription h2")?.text()?.trim()
-        val year            = document.selectXpath("//span[text()='Yapım Yılı:']//following-sibling::span").text().trim().toIntOrNull()
-        val tags            = document.selectXpath("//span[text()='Kategori:']//following-sibling::span").map { it.select("a").text() }
+        val year            = document.selectXpath("//span[text()='Yapım Yılı: ']//following-sibling::span").text().split(" ").first().toIntOrNull()
+        val tags            = document.selectXpath("//span[text()='Kategori: ']//following-sibling::span").map { it.select("a").text() }
         val rating          = document.selectFirst("span.imdb")?.text()?.trim()?.toRatingInt()
-        val duration        = document.selectXpath("//span[text()='Film Süresi:']//following-sibling::span").text().split(" ").first().trim().toIntOrNull()
+        val duration        = document.selectXpath("//span[text()='Film Süresi: ']//following-sibling::span").text().split(" ").first().trim().toIntOrNull()
         val recommendations = document.select("div.popularMovieContainer li").mapNotNull { it.toRecommendationResult() }
-        val actors          = document.selectXpath("//span[text()='Oyuncular:']//following-sibling::span").text().split(",")
+        val actors          = document.selectXpath("//span[text()='Oyuncular: ']//following-sibling::span").text().split(",")
         val trailer         = document.selectFirst("a.js-modal-btn")?.attr("data-video-id")?.let { "https://www.youtube.com/embed/$it" }
         return newMovieLoadResponse(title, url, TvType.Movie, url) {
             this.posterUrl       = poster
