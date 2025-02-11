@@ -116,11 +116,21 @@ class FullHDFilmIzlede : MainAPI() {
                     )
                 )
             }
-        M3u8Helper.generateM3u8(
+        callback.invoke(
+            ExtractorLink(
+                source = this.name,
+                name = this.name,
+                url = file,
+                referer = "$mainUrl/",
+                quality = Qualities.Unknown.value,
+                isM3u8 = true
+            )
+        )
+        /*M3u8Helper.generateM3u8(
             name,
             file,
             "$mainUrl/"
-        ).forEach(callback)
+        ).forEach(callback)*/
         return true
     }
 
