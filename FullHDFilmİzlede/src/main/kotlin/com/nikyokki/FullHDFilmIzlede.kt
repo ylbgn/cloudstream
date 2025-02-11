@@ -49,7 +49,8 @@ class FullHDFilmIzlede : MainAPI() {
 
     override suspend fun search(query: String): List<SearchResponse> {
         val document = app.post("${mainUrl}/ara",
-            headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")).document
+            headers = mapOf("Content-Type" to "application/x-www-form-urlencoded"),
+            data = mapOf("kelime" to query)).document
 
         return document.select("li.movie").mapNotNull { it.toMainPageResult() }
     }
