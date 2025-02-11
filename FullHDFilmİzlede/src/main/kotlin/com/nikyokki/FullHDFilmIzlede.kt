@@ -48,9 +48,10 @@ class FullHDFilmIzlede : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val document = app.post("${mainUrl}/ara", headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")).document
+        val document = app.post("${mainUrl}/ara",
+            headers = mapOf("Content-Type" to "application/x-www-form-urlencoded")).document
 
-        return document.select("div.result-item article").mapNotNull { it.toMainPageResult() }
+        return document.select("li.movie").mapNotNull { it.toMainPageResult() }
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
@@ -70,9 +71,11 @@ class FullHDFilmIzlede : MainAPI() {
         val poster          = fixUrlNull(document.selectFirst("div.moviePoster img")?.attr("src"))
         val description     = document.selectFirst("div.movieDescription h2")?.text()?.trim()
         val year            = document.selectXpath("//span[text()='Yapım Yılı: ']//following-sibling::span").text().split(" ").first().toIntOrNull()
-        val tags            = document.selectXpath("//span[text()='Kategori: ']//following-sibling::span").map { it.select("a").text() }
+        val tags            = document.selectXpath("//span[text()='Kategori: ']//following-sibling::span").select("a").map { it.text().replace(" izle", "") }
         val rating          = document.selectFirst("span.imdb")?.text()?.trim()?.toRatingInt()
-        val duration        = document.selectXpath("//span[text()='Film Süresi: ']//following-sibling::span").text().split(" ").first().trim().toIntOrNull()
+        val duration        =
+            document.selectXpath("//span[text()='Film Süresi: ']//following-sibling::span").text().split(" ").first().trim().toIntOrNull()
+                ?.times(60)
         val recommendations = document.select("div.popularMovieContainer li").mapNotNull { it.toRecommendationResult() }
         val actors          = document.selectXpath("//span[text()='Oyuncular: ']//following-sibling::span").text().split(",")
         val trailer         = document.selectFirst("a.js-modal-btn")?.attr("data-video-id")?.let { "https://www.youtube.com/embed/$it" }
