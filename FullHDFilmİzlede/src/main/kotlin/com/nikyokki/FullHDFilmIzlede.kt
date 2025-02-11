@@ -29,15 +29,19 @@ class FullHDFilmIzlede : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get("${request.data}sayfa=$page").document
+        var url = request.data
+        if (page != 1) {
+            url += "sayfa=$page\""
+        }
+        val document = app.get(url).document
         val home     = document.select("li.movie").mapNotNull { it.toMainPageResult() }
 
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toMainPageResult(): SearchResponse? {
-        val title     = this.selectFirst("div.movieName a")?.text() ?: return null
-        val href      = fixUrlNull(this.selectFirst("div.movieName a")?.attr("href")) ?: return null
+        val title     = this.selectFirst("div.movieName a")?.text() ?: "title"
+        val href      = fixUrlNull(this.selectFirst("div.movieName a")?.attr("href")) ?: "href"
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("src"))
 
         return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
@@ -62,7 +66,7 @@ class FullHDFilmIzlede : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val document = app.get(url).document
 
-        val title           = document.selectFirst("div.movieBar h2")?.text()?.replace(" izle", "")?.trim() ?: return null
+        val title           = document.selectFirst("div.movieBar h2")?.text()?.replace(" izle", "")?.trim() ?: "title"
         val poster          = fixUrlNull(document.selectFirst("div.moviePoster img")?.attr("src"))
         val description     = document.selectFirst("div.movieDescription h2")?.text()?.trim()
         val year            = document.selectXpath("//span[text()='Yapım Yılı:']//following-sibling::span").text().trim().toIntOrNull()
