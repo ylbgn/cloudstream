@@ -25,7 +25,20 @@ class FullHDFilmIzlede : MainAPI() {
         "${mainUrl}/kategori/aksiyon-filmleri-izle"      to "Aksiyon",
         "${mainUrl}/kategori/belgesel-izle"   to "Belgesel",
         "${mainUrl}/kategori/bilim-kurgu-filmleri-izle" to "Bilim Kurgu",
-        "${mainUrl}/kategori/macera-filmleri-izle"  to "Macera"
+        "${mainUrl}/kategori/macera-filmleri-izle"  to "Macera",
+        "${mainUrl}/kategori/gerilim-filmleri-izle"  to "Gerilim",
+        "${mainUrl}/kategori/komedi-filmleri-izle"  to "Komedi",
+        "${mainUrl}/kategori/dram-filmleri-izle"  to "Dram",
+        "${mainUrl}/kategori/korku-filmleri-izle"  to "Korku",
+        "${mainUrl}/kategori/romantik-filmleri-izle"  to "Romantik",
+        "${mainUrl}/kategori/suc-filmleri-izle"  to "Suç",
+        "${mainUrl}/kategori/tarih-filmleri-izle"  to "Tarih",
+        "${mainUrl}/kategori/savas-filmleri-izle"  to "Savaş",
+        "${mainUrl}/kategori/fantastik-filmleri-izle"  to "Fantastik",
+        "${mainUrl}/kategori/animasyon-filmleri-izle"  to "Animasyon",
+        "${mainUrl}/kategori/aile-filmleri-izle"  to "Aile",
+        "${mainUrl}/kategori/gizem-filmleri-izle"  to "Gizem",
+        "${mainUrl}/kategori/western-filmleri-izle"  to "Western"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
