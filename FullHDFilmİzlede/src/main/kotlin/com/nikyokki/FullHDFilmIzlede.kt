@@ -1,5 +1,3 @@
-
-
 package com.nikyokki
 
 import android.util.Log

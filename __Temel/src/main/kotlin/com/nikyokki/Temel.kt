@@ -1,6 +1,4 @@
-
-
-package com.keyiflerolsun
+package com.nikyokki
 
 import android.util.Log
 import org.jsoup.nodes.Element
