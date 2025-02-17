@@ -144,22 +144,23 @@ class FilmKovasi : MainAPI() {
         Log.d("FKV", "data » ${data}")
         val document = app.get(data).document
         val iframe = document.selectFirst("iframe")?.attr("src")
+        val fName = document.selectFirst("div.sources span")?.text() ?: this.name
         if (iframe != null) {
-            loadLinkExtractor(iframe, subtitleCallback, callback)
+            loadLinkExtractor(iframe, fName, subtitleCallback, callback)
         }
-        if (document.select("div.sources a").size > 0) {
-            document.select("div.soruces a").forEach {
-                val doc = app.get(it.attr("href")).document
-                val iffi = doc.selectFirst("iframe")?.attr("src") ?: ""
-                Log.d("FKV", iffi)
-                loadLinkExtractor(iffi, subtitleCallback, callback)
-            }
+        document.select("div.sources a").forEach {
+            val name = it.selectFirst("span")?.text() ?: this.name
+            val doc = app.get(it.attr("href")).document
+            val iffi = doc.selectFirst("iframe")?.attr("src") ?: ""
+            Log.d("FKV", iffi)
+            loadLinkExtractor(iffi, name, subtitleCallback, callback)
         }
         return true
     }
 
     private suspend fun loadLinkExtractor(
         iframe: String,
+        name: String,
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ) {
