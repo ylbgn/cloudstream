@@ -24,7 +24,7 @@ import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.nodes.Element
 
 class FilmIzlesene : MainAPI() {
-    override var mainUrl = "https://www.filmizlesene.pro"
+    override var mainUrl = "https://www.filmizlesene.plus"
     override var name = "Filmİzlesene"
     override val hasMainPage = true
     override var lang = "tr"
