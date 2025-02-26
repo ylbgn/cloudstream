@@ -28,7 +28,7 @@ import com.lagradost.cloudstream3.utils.Qualities
 import org.jsoup.nodes.Element
 
 class FilmKovasi : MainAPI() {
-    override var mainUrl = "https://filmkovasi.tv"
+    override var mainUrl = "https://filmkovasi.pw"
     override var name = "FilmKovası"
     override val hasMainPage = true
     override var lang = "tr"
