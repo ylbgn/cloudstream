@@ -32,7 +32,7 @@ import org.jsoup.nodes.Element
 import java.util.regex.Pattern
 
 class DiziMag : MainAPI() {
-    override var mainUrl = "https://dizimag.org"
+    override var mainUrl = "https://dizimag.net"
     override var name = "DiziMag"
     override val hasMainPage = true
     override var lang = "tr"
