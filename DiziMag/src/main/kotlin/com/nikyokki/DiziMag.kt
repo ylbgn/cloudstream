@@ -48,30 +48,50 @@ class DiziMag : MainAPI() {
     override var sequentialMainPageScrollDelay = 250L  // ? 0.05 saniye
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/kesfet/eyJjYXRlZ29yeSI6W3siaWQiOiI4OSIsIm5hbWUiOiJBa3NpeW9uICYgTWFjZXJhIn1dfQ==" to "Aksiyon",
-        "${mainUrl}/kesfet/eyJjYXRlZ29yeSI6W3siaWQiOiI5MiIsIm5hbWUiOiJEcmFtIn1dfQ==" to "Dram",
-        "${mainUrl}/kesfet/eyJjYXRlZ29yeSI6W3siaWQiOiI4OCIsIm5hbWUiOiJCaWxpbSBLdXJndSAmIEZhbnRhemkifV19" to "Bilim Kurgu",
+        "${mainUrl}dizi/tur/aile" to "Aile",
+        "${mainUrl}dizi/tur/aksiyon-macera" to "Aile",
+        "${mainUrl}dizi/tur/belgesel" to "Aile",
+        "${mainUrl}dizi/tur/bilim-kurgu-fantazi" to "Aile",
+        "${mainUrl}dizi/tur/dram" to "Dram",
+        "${mainUrl}dizi/tur/gizem" to "Gizem",
+        "${mainUrl}dizi/tur/komedi" to "Komedi",
+        "${mainUrl}dizi/tur/savas-politik" to "Savaş Politik",
+        "${mainUrl}dizi/tur/suc" to "Suç",
 
-        "${mainUrl}/film/tur/aile" to "Aile Film"
+        "${mainUrl}/film/tur/aile" to "Aile Film",
+        "${mainUrl}/film/tur/animasyon" to "Animasyon Film",
+        "${mainUrl}/film/tur/bilim-kurgu" to "Bilim-Kurgu Film",
+        "${mainUrl}/film/tur/dram" to "Dram Film",
+        "${mainUrl}/film/tur/fantastik" to "Fantastik Film",
+        "${mainUrl}/film/tur/gerilim" to "Gerilim Film",
+        "${mainUrl}/film/tur/gizem" to "Gizem Film",
+        "${mainUrl}/film/tur/komedi" to "Komedi Film",
+        "${mainUrl}/film/tur/korku" to "Korku Film",
+        "${mainUrl}/film/tur/macera" to "Macera Film",
+        "${mainUrl}/film/tur/romantik" to "Romantik Film",
+        "${mainUrl}/film/tur/savas" to "Savaş Film",
+        "${mainUrl}/film/tur/suc" to "Suç Film",
+        "${mainUrl}/film/tur/tarih" to "Tarih Film",
+        "${mainUrl}/film/tur/vahsi-bati" to "Vahşi Batı Film",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val mainReq = app.get("${request.data}/${page}")
 
         val document = mainReq.document
-        val home = document.select("li.w-full").mapNotNull { it.diziler() }
+        val home = document.select("div.poster-long").mapNotNull { it.diziler() }
 
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.diziler(): SearchResponse? {
         val title =
-            this.selectFirst("div.filter-result-box-subject-top-left h2")?.text() ?: return null
+            this.selectFirst("div.poster-long-subject h2")?.text() ?: return null
         val href =
-            fixUrlNull(this.selectFirst("div.filter-result-box-subject-top-left a")?.attr("href"))
+            fixUrlNull(this.selectFirst("div.poster-long-subject a")?.attr("href"))
                 ?: return null
         val posterUrl =
-            fixUrlNull(this.selectFirst("div.filter-result-box-image img")?.attr("data-src"))
+            fixUrlNull(this.selectFirst("div.poster-long-image img")?.attr("data-src"))
 
         return if (href.contains("/dizi/")) {
             newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
