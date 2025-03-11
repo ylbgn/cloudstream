@@ -49,9 +49,10 @@ class DiziMag : MainAPI() {
 
     override val mainPage = mainPageOf(
         "${mainUrl}/dizi/tur/aile" to "Aile",
-        "${mainUrl}/dizi/tur/aksiyon-macera" to "Aile",
-        "${mainUrl}/dizi/tur/belgesel" to "Aile",
-        "${mainUrl}/dizi/tur/bilim-kurgu-fantazi" to "Aile",
+        "${mainUrl}/dizi/tur/aksiyon-macera" to "Aksiyon-Macera",
+        "${mainUrl}/dizi/tur/animasyon" to "Animasyon",
+        "${mainUrl}/dizi/tur/belgesel" to "Belgesel",
+        "${mainUrl}/dizi/tur/bilim-kurgu-fantazi" to "Bilim Kurgu",
         "${mainUrl}/dizi/tur/dram" to "Dram",
         "${mainUrl}/dizi/tur/gizem" to "Gizem",
         "${mainUrl}/dizi/tur/komedi" to "Komedi",
@@ -109,8 +110,14 @@ class DiziMag : MainAPI() {
         val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
 
-        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
-            this.posterUrl = posterUrl
+        if (href.contains("/dizi/")) {
+            return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+                this.posterUrl = posterUrl
+            }
+        } else {
+            return newMovieSearchResponse(title, href, TvType.Movie) {
+                this.posterUrl = posterUrl
+            }
         }
     }
 
@@ -277,17 +284,17 @@ class DiziMag : MainAPI() {
                     val regex = Regex("#EXT-X-STREAM-INF:.*? (https?://\\S+)")
                     val matchResult = regex.find(m3u8Content.text())
                     val m3uUrl = matchResult?.groupValues?.get(1) ?: ""
-                    callback.invoke(
-                        ExtractorLink(
-                            source = this.name,
-                            name = this.name,
-                            headers = mapOf("Accept" to "*/*", "Referer" to iframe),
-                            url = m3uUrl,
-                            referer = iframe,
-                            quality = Qualities.Unknown.value,
-                            isM3u8 = true
-                        )
-                    )
+//                    callback.invoke(
+//                        ExtractorLink(
+//                            source = this.name,
+//                            name = this.name,
+//                            headers = mapOf("Accept" to "*/*", "Referer" to iframe),
+//                            url = m3uUrl,
+//                            referer = iframe,
+//                            quality = Qualities.Unknown.value,
+//                            isM3u8 = true
+//                        )
+//                    )
                     callback.invoke(
                         ExtractorLink(
                             source = this.name,
