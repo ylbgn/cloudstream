@@ -48,15 +48,15 @@ class DiziMag : MainAPI() {
     override var sequentialMainPageScrollDelay = 250L  // ? 0.05 saniye
 
     override val mainPage = mainPageOf(
-        "${mainUrl}dizi/tur/aile" to "Aile",
-        "${mainUrl}dizi/tur/aksiyon-macera" to "Aile",
-        "${mainUrl}dizi/tur/belgesel" to "Aile",
-        "${mainUrl}dizi/tur/bilim-kurgu-fantazi" to "Aile",
-        "${mainUrl}dizi/tur/dram" to "Dram",
-        "${mainUrl}dizi/tur/gizem" to "Gizem",
-        "${mainUrl}dizi/tur/komedi" to "Komedi",
-        "${mainUrl}dizi/tur/savas-politik" to "Savaş Politik",
-        "${mainUrl}dizi/tur/suc" to "Suç",
+        "${mainUrl}/dizi/tur/aile" to "Aile",
+        "${mainUrl}/dizi/tur/aksiyon-macera" to "Aile",
+        "${mainUrl}/dizi/tur/belgesel" to "Aile",
+        "${mainUrl}/dizi/tur/bilim-kurgu-fantazi" to "Aile",
+        "${mainUrl}/dizi/tur/dram" to "Dram",
+        "${mainUrl}/dizi/tur/gizem" to "Gizem",
+        "${mainUrl}/dizi/tur/komedi" to "Komedi",
+        "${mainUrl}/dizi/tur/savas-politik" to "Savaş Politik",
+        "${mainUrl}/dizi/tur/suc" to "Suç",
 
         "${mainUrl}/film/tur/aile" to "Aile Film",
         "${mainUrl}/film/tur/animasyon" to "Animasyon Film",
