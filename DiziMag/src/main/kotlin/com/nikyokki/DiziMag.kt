@@ -159,11 +159,11 @@ class DiziMag : MainAPI() {
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
     override suspend fun load(url: String): LoadResponse? {
-
         val mainReq = app.get(url, referer = mainUrl)
         val document = mainReq.document
-        val title =
-            document.selectFirst("div.page-title h1")?.selectFirst("a")?.text() ?: return null
+        val title = document.selectFirst("div.page-title h1")?.selectFirst("a")?.text() ?: return null
+        val orgtitle = document.selectFirst("div.page-title p")?.text() ?: ""
+        var tit = "$title - $orgtitle"
         val poster =
             fixUrlNull(document.selectFirst("div.series-profile-image img")?.attr("src"))
         val year =
@@ -204,9 +204,8 @@ class DiziMag : MainAPI() {
                 }
                 szn++
             }
-            println("Episodes : " + episodeses.size)
 
-            return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodeses) {
+            return newTvSeriesLoadResponse(tit, url, TvType.TvSeries, episodeses) {
                 this.posterUrl = poster
                 this.year = year
                 this.plot = description
