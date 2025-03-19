@@ -2,6 +2,7 @@
 
 package com.keyiflerolsun
 
+import android.util.Base64
 import android.util.Log
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -31,7 +32,9 @@ import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+
 
 class Dizilla : MainAPI() {
     override var mainUrl = "https://dizilla.nl"
@@ -48,8 +51,13 @@ class Dizilla : MainAPI() {
         "${mainUrl}/dizi-turu/aile" to "Aile",
         "${mainUrl}/dizi-turu/aksiyon" to "Aksiyon",
         "${mainUrl}/dizi-turu/bilim-kurgu" to "Bilim Kurgu",
+        "${mainUrl}/dizi-turu/dram" to "Dram",
+        "${mainUrl}/dizi-turu/fantastik" to "Fantastik",
+        "${mainUrl}/dizi-turu/gerilim" to "Gerilim",
+        "${mainUrl}/dizi-turu/komedi" to "Komedi",
+        "${mainUrl}/dizi-turu/korku" to "Korku",
+        "${mainUrl}/dizi-turu/macera" to "Macera",
         "${mainUrl}/dizi-turu/romantik" to "Romantik",
-        "${mainUrl}/dizi-turu/komedi" to "Komedi"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
@@ -85,22 +93,17 @@ class Dizilla : MainAPI() {
         }
     }
     private suspend fun Element.sonBolumler(): SearchResponse {
-        Log.d("DZL", "this $this")
         val name = this.selectFirst("h2")?.text() ?: ""
-        Log.d("DZL", "bolum name $name")
         val epName = this.selectFirst("div.opacity-80")!!.text().replace(". Sezon ", "x")
             .replace(". Bölüm", "")
-        Log.d("DZL", "bolum epName $epName")
 
         val title = "$name - $epName"
 
         val epDoc = fixUrlNull(this.attr("href"))?.let { app.get(it).document }
 
         val href = fixUrlNull(epDoc?.selectFirst("div.poster a")?.attr("href")) ?: "return null"
-        Log.d("DZL", "bolum href $href")
 
         val posterUrl = fixUrlNull(epDoc?.selectFirst("div.poster img")?.attr("src"))
-        Log.d("DZL", "bolum posterUrl $posterUrl")
 
         return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
             this.posterUrl = posterUrl
@@ -118,26 +121,21 @@ class Dizilla : MainAPI() {
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
-        val mainReq = app.get(mainUrl)
-        val mainPage = mainReq.document
-        val cKey = mainPage.selectFirst("input[name='cKey']")?.attr("value") ?: return emptyList()
-        val cValue =
-            mainPage.selectFirst("input[name='cValue']")?.attr("value") ?: return emptyList()
-        val cookie = mainReq.cookies["PHPSESSID"].toString()
-
-        val veriler = mutableListOf<SearchResponse>()
-
         val searchReq = app.post(
             "${mainUrl}/api/bg/searchcontent?searchterm=$query",
             headers = mapOf(
                 "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+                "user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
                 "Accept" to "application/json, text/plain, */*",
+                "Accept-Language" to "en-US,en;q=0.5",
                 "X-Requested-With" to "XMLHttpRequest",
+                "Sec-Fetch-Site" to "same-origin",
+                "Sec-Fetch-Mode" to "cors",
+                "Sec-Fetch-Dest" to "empty",
+                "Referer" to "${mainUrl}/"
             ),
             referer = "${mainUrl}/",
-
         )
-        Log.d("DZL", "Search: $searchReq")
         val objectMapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         val searchResult: SearchResult = objectMapper.readValue(searchReq.toString())
@@ -146,13 +144,11 @@ class Dizilla : MainAPI() {
         if (contentJson.state != true) {
             throw ErrorLoadingException("Invalid Json response")
         }
+        val veriler = mutableListOf<SearchResponse>()
         contentJson.result?.forEach {
             val name = it.title.toString()
             val link = fixUrl(it.slug.toString())
             val posterLink = it.poster.toString()
-            Log.d("DZL", name)
-            Log.d("DZL", link)
-            Log.d("DZL", posterLink)
             val toSearchResponse = toSearchResponse(name, link, posterLink)
             veriler.add(toSearchResponse)
         }
@@ -206,7 +202,6 @@ class Dizilla : MainAPI() {
                     this.season = season
                     this.episode = epEpisode
                 }
-                Log.d("DZL", newEpisode.name.toString() + " - " + newEpisode.season + " - " + newEpisode.data +  " - " + newEpisode.episode)
                 episodeses.add(newEpisode)
             }
         }
@@ -227,13 +222,16 @@ class Dizilla : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit
     ): Boolean {
-        Log.d("DZL", "data » ${data}")
         val document = app.get(data).document
-        Log.d("DZL", "Document: $document")
-        val iframe =
-            fixUrlNull(document.selectFirst("div#dizillaVideoP iframe")?.attr("src")) ?: return false
-        Log.d("DZL", "iframe » $iframe")
-
+        val script = document.selectFirst("script#__NEXT_DATA__")?.data()
+        val objectMapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        val secureData = objectMapper.readTree(script).get("props").get("pageProps").get("secureData")
+        val decodedData = Base64.decode(secureData.toString().replace("\"", ""), Base64.DEFAULT).toString(Charsets.UTF_8)
+        val source = objectMapper.readTree(decodedData).get("RelatedResults")
+            .get("getEpisodeSources").get("result").get(0).get("source_content").toString()
+            .replace("\"", "").replace("\\", "")
+        val iframe = fixUrlNull(Jsoup.parse(source).select("iframe").attr("src")) ?: return false
         loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
         return true
     }
