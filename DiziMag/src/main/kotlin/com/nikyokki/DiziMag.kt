@@ -2,6 +2,7 @@ package com.nikyokki
 
 import CryptoJS
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.lagradost.api.Log
 import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.Episode
 import com.lagradost.cloudstream3.ErrorLoadingException
@@ -79,7 +80,8 @@ class DiziMag : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val mainReq = app.get("${request.data}/${page}")
 
-        val document = mainReq.document
+        //val document = mainReq.document.body()
+        val document = Jsoup.parse(mainReq.body.string())
         val home = document.select("div.poster-long").mapNotNull { it.diziler() }
 
         return newHomePageResponse(request.name, home)
