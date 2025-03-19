@@ -34,6 +34,7 @@ import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.loadExtractor
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
+import java.util.Calendar
 
 
 class Dizilla : MainAPI() {
@@ -61,10 +62,14 @@ class Dizilla : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get(request.data).document
+        var document = app.get(request.data).document
         val home = if (request.data.contains("dizi-turu")) {
             document.select("span.watchlistitem-").mapNotNull { it.diziler() }
         } else if (request.data.contains("/arsiv")) {
+            val yil = Calendar.getInstance().get(Calendar.YEAR)
+            val sayfa = "?page=sayi&tab=1&sort=date_desc&filterType=2&imdbMin=5&imdbMax=10&yearMin=1900&yearMax=$yil"
+            val replace = sayfa.replace("sayi", page.toString())
+            document = app.get("${request.data}${replace}").document
             document.select("a.w-full").mapNotNull { it.yeniEklenenler() }
         } else {
             document.select("div.col-span-3 a").mapNotNull { it.sonBolumler() }
