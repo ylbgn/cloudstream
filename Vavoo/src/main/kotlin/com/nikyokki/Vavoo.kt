@@ -23,7 +23,8 @@ import com.lagradost.cloudstream3.utils.Qualities
 class Vavoo() : MainAPI() {
     override var mainUrl = "https://vavoo.to"
     val proxyUrl = "https://wproxy.net"
-    override var name = "Huhu"
+    override var name = "Vavoo"
+    override var lang = "tr"
     override val supportedTypes = setOf(TvType.Live)
     override val hasMainPage = true
     override val hasDownloadSupport = false
@@ -31,14 +32,7 @@ class Vavoo() : MainAPI() {
 
     private suspend fun getChannels(): List<Channel> {
         val mainReq = app.get(proxyUrl)
-        val cookie = mainReq.cookies["PHPSESSID"].toString()
-        val headers = mapOf("Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-            "Accept-Language" to "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
-            "Connection" to "keep-alive", "Referer" to proxyUrl,
-            "Sec-Fetch-Dest" to "document", "Sec-Fetch-Mode" to "navigate", "Sec-Fetch-Site" to "same-origin", "Sec-Fetch-User" to "?1",
-            "Upgrade-Insecure-Requests" to "1", "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
-            "sec-ch-ua" to "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"", "sec-ch-ua-mobile" to "?0",
-            "sec-ch-ua-platform" to "\"Windows\"")
+        cookie = mainReq.cookies["PHPSESSID"].toString()
         val document = app.get("https://sv1.wproxy.info/proxy.php/$mainUrl/channels", headers = headers,
             cookies = mapOf(
                 "PHPSESSID" to cookie
@@ -48,9 +42,17 @@ class Vavoo() : MainAPI() {
 
     companion object {
         var channels = emptyList<Channel>()
+        var cookie = ""
+        val headers = mapOf("Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Language" to "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Connection" to "keep-alive", "Referer" to "https://wproxy.net",
+            "Sec-Fetch-Dest" to "document", "Sec-Fetch-Mode" to "navigate", "Sec-Fetch-Site" to "same-origin", "Sec-Fetch-User" to "?1",
+            "Upgrade-Insecure-Requests" to "1", "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+            "sec-ch-ua" to "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"", "sec-ch-ua-mobile" to "?0",
+            "sec-ch-ua-platform" to "\"Windows\"")
 
         @Suppress("ConstPropertyName")
-        const val posterUrl =
+        const val posterLink =
             "https://raw.githubusercontent.com/doGior/doGiorsHadEnough/master/Huhu/tv.png"
     }
 
@@ -86,8 +88,8 @@ class Vavoo() : MainAPI() {
     override suspend fun load(url: String): LoadResponse {
         Log.d("TV2", url)
         val channel = parseJson<Channel>(url)
-        return newLiveStreamLoadResponse(channel.name, url, "$mainUrl/play/${channel.id}/index.m3u8") {
-            this.posterUrl = posterUrl
+        return newLiveStreamLoadResponse(channel.name, "$mainUrl/play/${channel.id}/index.m3u8", "$mainUrl/play/${channel.id}/index.m3u8") {
+            this.posterUrl = posterLink
             this.tags = listOf(channel.country)
             this.recommendations = recommendations
         }
@@ -99,11 +101,17 @@ class Vavoo() : MainAPI() {
         subtitleCallback: (SubtitleFile) -> Unit,
         callback: (ExtractorLink) -> Unit,
     ): Boolean {
+        Log.d("TV2", data)
+        var url = data
+        if (data.startsWith("https://vavoo.to")) {
+            url = "https://sv1.wproxy.info/proxy.php/$data"
+        }
         callback(
             ExtractorLink(
                 this.name,
                 this.name,
-                data,
+                url,
+                headers = headers,
                 referer = proxyUrl,
                 quality = Qualities.Unknown.value,
                 isM3u8 = true
@@ -127,7 +135,7 @@ class Vavoo() : MainAPI() {
                 name,
                 this.toJson(),
                 apiName,
-                posterUrl = posterUrl
+                posterUrl = posterLink
             )
         }
     }
