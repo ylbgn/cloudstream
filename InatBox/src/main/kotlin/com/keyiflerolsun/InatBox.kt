@@ -16,7 +16,7 @@ import org.json.JSONException
 import org.json.JSONObject
 
 class InatBox : MainAPI() {
-    private val contentUrl  = "https://dizibox.rest"
+    private val contentUrl  = "https://dizibox.live"
 
     override var name                 = "InatBox"
     override val hasMainPage          = true
