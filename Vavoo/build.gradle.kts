@@ -1,4 +1,4 @@
-version = 2
+version = 1
 
 cloudstream {
     authors     = listOf("nikyokki")
@@ -12,7 +12,7 @@ cloudstream {
      * 2: Slow
      * 3: Beta only
     **/
-    status  = 0 // will be 3 if unspecified
+    status  = 1 // will be 3 if unspecified
     tvTypes = listOf("Live")
     iconUrl = "https://www.google.com/s2/favicons?domain=vavoo.to&sz=%size%"
 }
