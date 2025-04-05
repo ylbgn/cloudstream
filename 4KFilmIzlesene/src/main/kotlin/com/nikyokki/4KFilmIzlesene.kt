@@ -122,7 +122,7 @@ class `4KFilmIzlesene` : MainAPI() {
         data: String,
         isCasting: Boolean,
         subtitleCallback: (SubtitleFile) -> Unit,
-        callback: (newExtractorLink) -> Unit
+        callback: (ExtractorLink) -> Unit
     ): Boolean {
         Log.d("4KI", "data » ${data}")
         val document = app.get(data).document
