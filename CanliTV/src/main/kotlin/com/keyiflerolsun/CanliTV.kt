@@ -122,7 +122,7 @@ class CanliTV : MainAPI() {
         Log.d("IPTV", "kanal » $kanal")
 
         callback.invoke(
-            newExtractorLink(
+            newExtractorLink (
                 source  = this.name,
                 name    = this.name,
                 url     = loadData.url,
