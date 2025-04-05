@@ -149,7 +149,7 @@ class BelgeselX : MainAPI() {
                     Log.d("BLX", "videoUrl » $videoUrl")
 
                     callback.invoke(
-                        newExtractorLink (
+                        ExtractorLink (
                             source  = thisName,
                             name    = thisName,
                             url     = videoUrl,

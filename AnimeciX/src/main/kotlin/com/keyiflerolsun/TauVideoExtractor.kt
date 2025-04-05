@@ -22,7 +22,7 @@ open class TauVideo : ExtractorApi() {
 
         for (video in api.urls) {
             callback.invoke(
-                newExtractorLink (
+                ExtractorLink (
                     source  = this.name,
                     name    = this.name,
                     url     = video.url,
