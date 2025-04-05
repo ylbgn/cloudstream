@@ -127,7 +127,7 @@ class BelgeselX : MainAPI() {
         }
     }
 
-    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
+    override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (newExtractorLink) -> Unit): Boolean {
         Log.d("BLX", "data » $data")
         val source = app.get(data)
 
@@ -149,7 +149,7 @@ class BelgeselX : MainAPI() {
                     Log.d("BLX", "videoUrl » $videoUrl")
 
                     callback.invoke(
-                        ExtractorLink(
+                        newExtractorLink(
                             source  = thisName,
                             name    = thisName,
                             url     = videoUrl,
