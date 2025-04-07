@@ -1,7 +1,7 @@
-version = 7
+version = 8
 
 cloudstream {
-    authors     = listOf("keyiflerolsun")
+    authors     = listOf("keyiflerolsun", "nikyokki")
     language    = "tr"
     description = "Kült Filmler özenle en iyi filmleri derler ve iyi bir altyazılı film izleme deneyimi sunmayı amaçlar"
 

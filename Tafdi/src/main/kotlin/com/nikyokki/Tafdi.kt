@@ -1,6 +1,4 @@
-
-
-package com.keyiflerolsun
+package com.nikyokki
 
 import android.util.Log
 import org.jsoup.nodes.Element
@@ -52,7 +50,7 @@ class Tafdi : MainAPI() {
         return newHomePageResponse(request.name, home)
     }
 
-    private fun Element.toMainPageResult(): SearchResponse? {
+    private fun Element.toMainPageResult(): SearchResponse {
         val title = this.selectFirst("div.film-ismi a")?.text()?.replace(" izle", "") ?: ""
         val href = fixUrlNull(this.selectFirst("div.film-ismi a")?.attr("href")) ?: ""
         val posterUrl = fixUrlNull(this.selectFirst("div.poster img")?.attr("data-src"))
@@ -76,7 +74,7 @@ class Tafdi : MainAPI() {
 
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
 
-    override suspend fun load(url: String): LoadResponse? {
+    override suspend fun load(url: String): LoadResponse {
         val document = app.get(url).document
 
         val title = document.selectFirst("h1.title-border")?.text()?.replace(" izle", "")?.trim() ?: ""

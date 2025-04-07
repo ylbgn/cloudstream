@@ -1,7 +1,7 @@
-version = 1
+version = 2
 
 cloudstream {
-    authors     = listOf("keyiflerolsun")
+    authors     = listOf("keyiflerolsun", "nikyokki")
     language    = "ru"
     description = "(VPN) ОХ-АХ.ТВ - сайт для просмотра взрослых ТВ онлайн без каких либо регистраций. Смотрите бесплатно на мобильных устройствах iPad, iPhone и Android."
 

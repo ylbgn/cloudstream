@@ -23,10 +23,10 @@ import com.lagradost.cloudstream3.newTvSeriesLoadResponse
 import com.lagradost.cloudstream3.newTvSeriesSearchResponse
 import com.lagradost.cloudstream3.toRatingInt
 import com.lagradost.cloudstream3.utils.ExtractorLink
-import com.lagradost.cloudstream3.utils.INFER_TYPE
-import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.getQualityFromName
 import com.lagradost.cloudstream3.utils.loadExtractor
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import org.jsoup.nodes.Element
 
 class HDFilmCehennemi2 : MainAPI() {
@@ -291,14 +291,15 @@ class HDFilmCehennemi2 : MainAPI() {
 
             qualities.forEachIndexed { index, s ->
                 callback.invoke(
-                    ExtractorLink(
+                    newExtractorLink(
                         source = this.name,
                         name = "$s - Vidload - $name",
                         url = newUrl.replace("playlist", s),
-                        referer = "https://vidload.lol/",
-                        quality = getQualityFromName(s),
-                        isM3u8 = true
-                    )
+                        ExtractorLinkType.M3U8
+                    ) {
+                        this.referer = "https://vidload.lol/"
+                        this.quality = getQualityFromName(s)
+                    }
                 )
             }
         }

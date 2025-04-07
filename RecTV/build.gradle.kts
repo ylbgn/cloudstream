@@ -1,7 +1,7 @@
-version = 70
+version = 71
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "yusiqo", "inatchii", "JustRelaxable")
+    authors     = listOf("keyiflerolsun", "yusiqo", "inatchii", "JustRelaxable", "nikyokki")
     language    = "tr"
     description = "RecTv APK, Türkiye’deki en popüler Çevrimiçi Medya Akış platformlarından biridir. Filmlerin, Canlı Sporların, Web Dizilerinin ve çok daha fazlasının keyfini ücretsiz çıkarın."
 

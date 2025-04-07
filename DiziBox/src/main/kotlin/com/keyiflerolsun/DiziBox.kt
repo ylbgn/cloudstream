@@ -79,9 +79,8 @@ class DiziBox : MainAPI() {
         val document = app.get(
             url,
             cookies     = mapOf(
-                "LockUser"      to "true",
                 "isTrustedUser" to "true",
-                "dbxu"          to "1722403730363"
+                "dbxu"          to "1744009162326"
             ),
             interceptor = interceptor
         ).document
@@ -197,14 +196,15 @@ class DiziBox : MainAPI() {
             val vidUrl        = Regex("""file: '(.*)',""").find(decryptedDoc.html())?.groupValues?.get(1) ?: return false
 
             callback.invoke(
-                ExtractorLink(
+                newExtractorLink(
                     source  = this.name,
                     name    = this.name,
                     url     = vidUrl,
-                    referer = vidUrl,
-                    quality = getQualityFromName("4k"),
-                    isM3u8  = true
-                )
+                    ExtractorLinkType.M3U8
+                ) {
+                    this.referer = vidUrl
+                    this.quality = getQualityFromName("4K")
+                }
             )
 
         } else if (iframe.contains("/player/moly/moly.php")) {

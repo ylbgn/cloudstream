@@ -1,7 +1,7 @@
-version = 8
+version = 9
 
 cloudstream {
-    authors     = listOf("Horis, megix", "keyiflerolsun")
+    authors     = listOf("Horis, megix", "keyiflerolsun", "nikyokki")
     language    = "hi"
     description = "Netflix, PrimeVideo Content in Multiple Languages"
 

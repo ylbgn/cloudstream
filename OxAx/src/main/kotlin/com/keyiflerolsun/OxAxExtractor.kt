@@ -9,9 +9,11 @@ import com.lagradost.cloudstream3.SubtitleFile
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.utils.ExtractorApi
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
 import com.lagradost.cloudstream3.utils.StringUtils.decodeUri
 import com.lagradost.cloudstream3.utils.StringUtils.encodeUri
+import com.lagradost.cloudstream3.utils.newExtractorLink
 
 class OxAxPlayer : ExtractorApi() {
     override var name            = "OxAxPlayer"
@@ -68,14 +70,15 @@ class OxAxPlayer : ExtractorApi() {
         Log.d("Kekik_${this.name}", "m3uLink » $m3uLink")
 
         callback.invoke(
-            ExtractorLink(
+            newExtractorLink(
                 source  = this.name,
                 name    = this.name,
                 url     = m3uLink,
-                referer = url,
-                quality = Qualities.Unknown.value,
-                isM3u8  = true
-            )
+                ExtractorLinkType.M3U8
+            ) {
+                this.referer = url
+                this.quality = Qualities.Unknown.value
+            }
         )
     }
 }

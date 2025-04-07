@@ -1,7 +1,7 @@
-version = 20
+version = 21
 
 cloudstream {
-    authors     = listOf("keyiflerolsun")
+    authors     = listOf("keyiflerolsun", "nikyokki")
     language    = "tr"
     description = "Binlerce Film İzleme Seçeneğiyle En İyi Film İzleme Sitesi"
 

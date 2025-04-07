@@ -1,7 +1,7 @@
-version = 4
+version = 5
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "JustRelaxable")
+    authors     = listOf("keyiflerolsun", "JustRelaxable", "nikyokki")
     language    = "tr"
     description = "En yeni belgeseller, türkçe altyazılı yada dublaj olarak 1080p kalitesinde HD belgesel izle."
 
