@@ -326,12 +326,12 @@ class DDiziProvider : MainAPI() {
                                         source = name,
                                         name = "$name - $quality",
                                         url = fileUrl,
-                                        type = if (fileType == "hls") ExtractorLinkType.M3U8 else ExtractorLinkType.mp4
+                                        type = if (fileType == "hls") ExtractorLinkType.M3U8 else ExtractorLinkType.MP4
                                         ){
-										 this.referer = ogVideo
-										 this.quality = getQualityFromName(quality)
-										 this.headers = videoHeaders
-										}
+					this.referer = ogVideo
+					this.quality = getQualityFromName(quality)
+					this.headers = videoHeaders
+				}
                                 )
                                 
                                 // Eğer dosya türü hls ise, M3u8Helper ile işle
