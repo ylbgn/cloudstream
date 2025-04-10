@@ -322,16 +322,18 @@ class DDiziProvider : MainAPI() {
                                 
                                 // ExtractorLink oluştur
                                 callback.invoke(
-                                    ExtractorLink(
-                                        name,
-                                        "$name - $quality",
-                                        fileUrl,
-                                        ogVideo, // Referrer olarak player URL'sini kullan
-                                        getQualityFromName(quality),
-                                        fileType == "hls",
-                                        videoHeaders
-                                    )
-                                )
+                                    newExtractorLink(
+									source = name,
+									name = "$name - $quality",
+									url = fileUrl,
+									type = if (fileType == "hls") ExtractorLinkType.M3U8 else ExtractorLinkType.UNKNOWN // veya MP4 gibi uygun bir tür
+									)
+									{
+										this.referer = ogVideo
+										this.quality = getQualityFromName(quality)
+										this.headers = videoHeaders
+									}
+									)
                                 
                                 // Eğer dosya türü hls ise, M3u8Helper ile işle
                                 if (fileType == "hls") {
