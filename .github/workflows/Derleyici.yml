@@ -83,7 +83,7 @@ jobs:
           if ! jq -e '.[] | select(.internalName == "DDizi")' plugins.json > /dev/null; then
             jq '. += [{
               "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-			  "apiVersion": 1,
+              "apiVersion": 1,
               "status": 1,
               "language": "tr",
               "authors": ["yunus60"],
@@ -105,5 +105,5 @@ jobs:
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add .
-          git commit --amend -m "$GITHUB_SHA 'nın Derlenmesi" || exit 0
+          git commit -m "Yeni Derleme: $GITHUB_SHA" || exit 0  # Commit yapmadan önce eski commit'i değiştirme
           git push --force
