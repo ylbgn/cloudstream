@@ -326,7 +326,10 @@ class DDiziProvider : MainAPI() {
                                         source = name,
                                         name = "$name - $quality",
                                         url = fileUrl,
-                                        type = if (fileType == "hls") ExtractorLinkType.M3U8 else ExtractorLinkType.MP4
+                                        type = when (fileType) {
+           				 "hls" -> ExtractorLinkType.M3U8
+           				 "mp4" -> ExtractorLinkType.MP4
+           				 else -> ExtractorLinkType.M3U8
                                         ){
 					this.referer = ogVideo
 					this.quality = getQualityFromName(quality)
