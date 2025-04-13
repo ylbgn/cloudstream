@@ -240,7 +240,7 @@ class DDiziProvider : MainAPI() {
                     this.season = epSeasonNumber
                     this.episode = epEpisodeNumber
                     this.description = epDescription
-                    this.posterUrl = poster
+                    this.posterUrl = posterImg?.attr("src")
                 }
             }
 
@@ -447,11 +447,10 @@ class DDiziProvider : MainAPI() {
                                 // Tek bölüm için düzeltme
                                 allEpisodes.add(
                                     newEpisode(url) {
-                                        this.name = fullTitle
+                                        this.name = name
                                         this.season = seasonNumber
                                         this.episode = episodeNumber
-                                        this.description = plot
-                                        this.posterUrl = poster
+                                        this.description = epDescription
                                     }
                                 )
                                 callback.invoke(
