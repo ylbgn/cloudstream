@@ -352,11 +352,7 @@ class DDiziProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         Log.d("DDizi:", "Loading links for $data")
-        val document = app.get(
-            data,
-            headers = getHeaders(mainUrl),
-            charset = Charsets.UTF_8  // Karakter kodlamasını belirt
-        ).document
+        val document = app.get(data, headers = getHeaders(mainUrl)).document
 
         // Video player div'lerini kontrol et
         try {
@@ -364,19 +360,17 @@ class DDiziProvider : MainAPI() {
                 val dataEmbed = player.attr("data-embed")?.decodeBase64()
                 val dataSrc = player.attr("data-src")?.decodeBase64()
                 val dataVideo = player.attr("data-video")?.decodeBase64()
-                val dataFrame = player.attr("data-frame")?.decodeBase64()
                 
                 val videoUrl = when {
                     !dataEmbed.isNullOrEmpty() -> dataEmbed
                     !dataSrc.isNullOrEmpty() -> dataSrc
                     !dataVideo.isNullOrEmpty() -> dataVideo
-                    !dataFrame.isNullOrEmpty() -> dataFrame
                     else -> null
                 }
                 
                 if (!videoUrl.isNullOrEmpty()) {
                     Log.d("DDizi:", "Found player source: $videoUrl")
-                    loadExtractor(fixUrl(videoUrl), data, subtitleCallback, callback)
+                    loadExtractor(videoUrl, data, subtitleCallback, callback)
                 }
             }
         } catch (e: Exception) {
@@ -386,163 +380,15 @@ class DDiziProvider : MainAPI() {
         // İframe'leri kontrol et
         try {
             document.select("iframe").forEach { iframe ->
-                val iframeSrc = iframe.attr("src")?.decodeBase64() ?: iframe.attr("src")
+                val iframeSrc = iframe.attr("src")
                 if (!iframeSrc.isNullOrEmpty()) {
                     Log.d("DDizi:", "Found iframe source: $iframeSrc")
-                    loadExtractor(fixUrl(iframeSrc), data, subtitleCallback, callback)
+                    loadExtractor(iframeSrc, data, subtitleCallback, callback)
                 }
             }
         } catch (e: Exception) {
             Log.d("DDizi:", "Error parsing iframes: ${e.message}")
         }
-
-        // Meta og:video etiketini kontrol et
-        try {
-            val ogVideo = document.selectFirst("meta[property=og:video], meta[property=og:video:url]")?.attr("content")
-            if (!ogVideo.isNullOrEmpty()) {
-                Log.d("DDizi:", "Found og:video meta tag: $ogVideo")
-                
-                // Video bağlantısına istek at ve jwplayer yapılandırmasını bul
-                val playerDoc = app.get(
-                    ogVideo, 
-                    headers = getHeaders(data)
-                ).document
-                val scripts = playerDoc.select("script")
-                
-                // jwplayer yapılandırmasını içeren script'i bul
-                scripts.forEach { script ->
-                    val content = script.html()
-                    if (content.contains("jwplayer") && content.contains("sources")) {
-                        Log.d("DDizi:", "Found jwplayer configuration")
-                        
-                        // sources kısmını regex ile çıkar
-                        val sourcesRegex = Regex("""sources:\s*\[\s*\{(.*?)\}\s*,?\s*\]""", RegexOption.DOT_MATCHES_ALL)
-                        val sourcesMatch = sourcesRegex.find(content)
-                        
-                        if (sourcesMatch != null) {
-                            // file parametresini bul
-                            val fileRegex = Regex("""file:\s*["'](.*?)["']""")
-                            val fileMatch = fileRegex.find(sourcesMatch.groupValues[1])
-                            
-                            if (fileMatch != null) {
-                                val fileUrl = fileMatch.groupValues[1]
-                                Log.d("DDizi:", "Found video source: $fileUrl")
-                                
-                                // Dosya türünü belirle
-                                val fileType = when {
-                                    fileUrl.contains(".m3u8") || fileUrl.contains("hls") -> "hls"
-                                    fileUrl.contains(".mp4") -> "mp4"
-                                    else -> "hls" // Varsayılan olarak hls kabul et
-                                }
-                                
-                                // Kalite bilgisini belirle
-                                val qualityRegex = Regex("""label:\s*["'](.*?)["']""")
-                                val qualityMatch = qualityRegex.find(sourcesMatch.groupValues[1])
-                                val quality = qualityMatch?.groupValues?.get(1) ?: "Auto"
-                                
-                                Log.d("DDizi:", "Video type: $fileType, quality: $quality")
-                                
-                                // master.txt dosyası için özel başlıklar
-                                val videoHeaders = if (fileUrl.contains("master.txt")) {
-                                    mapOf(
-                                        "accept" to "*/*",
-                                        "accept-language" to "tr-TR,tr;q=0.5",
-                                        "cache-control" to "no-cache",
-                                        "pragma" to "no-cache",
-                                        "sec-ch-ua" to "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\"",
-                                        "sec-ch-ua-mobile" to "?0",
-                                        "sec-ch-ua-platform" to "\"Windows\"",
-                                        "sec-fetch-dest" to "empty",
-                                        "sec-fetch-mode" to "cors",
-                                        "sec-fetch-site" to "cross-site",
-                                        "user-agent" to USER_AGENT,
-                                        "referer" to ogVideo // Player URL'sini referrer olarak kullan
-                                    )
-                                } else {
-                                    getHeaders(ogVideo)
-                                }
-                                
-                                Log.d("DDizi:", "Using headers for video source: ${videoHeaders.keys.joinToString()}")
-                                
-                                // ExtractorLink oluştur
-                                callback.invoke(
-                                    ExtractorLink(
-                                        source = name,
-                                        name = "$name - $quality",
-                                        url = fileUrl,
-                                        referer = ogVideo,
-                                        quality = getQualityFromName(quality),
-                                        headers = videoHeaders,
-                                        type = if (fileType == "hls") ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
-                                    )
-                                )
-                                // Eğer dosya türü hls ise, M3u8Helper ile işle
-                                if (fileType == "hls") {
-                                    try {
-                                        Log.d("DDizi:", "Generating M3u8 for: $fileUrl")
-                                        M3u8Helper.generateM3u8(
-                                            name,
-                                            fileUrl,
-                                            ogVideo, // Player URL'sini referrer olarak kullan
-                                            headers = videoHeaders
-                                        ).forEach(callback)
-                                    } catch (e: Exception) {
-                                        Log.d("DDizi:", "Error generating M3u8: ${e.message}")
-                                        
-                                        // Doğrudan bağlantıyı dene
-                                        if (fileUrl.contains("master.txt")) {
-                                            try {
-                                                Log.d("DDizi:", "Trying to get master.txt content directly")
-                                                val masterContent = app.get(fileUrl, headers = videoHeaders).text
-                                                Log.d("DDizi:", "Master.txt content length: ${masterContent.length}")
-                                                
-                                                // m3u8 bağlantılarını bul
-                                                val m3u8Regex = Regex("""(https?://.*?\.m3u8[^"\s]*)""")
-                                                val m3u8Matches = m3u8Regex.findAll(masterContent)
-                                                
-                                                m3u8Matches.forEach { m3u8Match ->
-                                                    val m3u8Url = m3u8Match.groupValues[1]
-                                                    Log.d("DDizi:", "Found m3u8 in master.txt: $m3u8Url")
-                                                    
-                                                    // Kalite bilgisini çıkar
-                                                    val m3u8Quality = when {
-                                                        m3u8Url.contains("1080") -> "1080p"
-                                                        m3u8Url.contains("720") -> "720p"
-                                                        m3u8Url.contains("480") -> "480p"
-                                                        m3u8Url.contains("360") -> "360p"
-                                                        else -> "Auto"
-                                                    }
-                                                    
-                                                    callback.invoke(
-                                    ExtractorLink(
-                                        source = name,
-                                        name = "$name - $quality",
-                                        url = fileUrl,
-                                        referer = ogVideo,
-                                        quality = getQualityFromName(quality),
-                                        headers = videoHeaders,
-                                        type = if (fileType == "hls") ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
-                                    )
-                                )
-                                                }
-                                            } catch (e2: Exception) {
-                                                Log.d("DDizi:", "Error parsing master.txt: ${e2.message}")
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // Yine de normal extractor'ları dene
-                loadExtractor(ogVideo, data, subtitleCallback, callback)
-            }
-        } catch (e: Exception) {
-            Log.d("DDizi:", "Error parsing og:video meta tag: ${e.message}")
-        }
-
 
         return true
     }
