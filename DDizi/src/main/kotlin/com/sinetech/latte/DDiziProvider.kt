@@ -352,42 +352,48 @@ class DDiziProvider : MainAPI() {
         callback: (ExtractorLink) -> Unit
     ): Boolean {
         Log.d("DDizi:", "Loading links for $data")
-        val document = app.get(data, headers = getHeaders(mainUrl)).document
-        
-        // İlk olarak iframe'leri kontrol et
-        try {
-            document.select("iframe").forEach { iframe ->
-                val iframeSrc = iframe.attr("src")
-                if (!iframeSrc.isNullOrEmpty()) {
-                    Log.d("DDizi:", "Found iframe source: $iframeSrc")
-                    loadExtractor(iframeSrc, data, subtitleCallback, callback)
-                }
-            }
-        } catch (e: Exception) {
-            Log.d("DDizi:", "Error parsing iframes: ${e.message}")
-        }
+        val document = app.get(
+            data,
+            headers = getHeaders(mainUrl),
+            charset = Charsets.UTF_8  // Karakter kodlamasını belirt
+        ).document
 
         // Video player div'lerini kontrol et
         try {
-            document.select("div#video-player, div.player-embed, div.player, div.video-player").forEach { player ->
-                val dataEmbed = player.attr("data-embed")
-                val dataSrc = player.attr("data-src")
-                val dataVideo = player.attr("data-video")
+            document.select("div#video-player, div.player-embed, div.player, div.video-player, div.video").forEach { player ->
+                val dataEmbed = player.attr("data-embed")?.decodeBase64()
+                val dataSrc = player.attr("data-src")?.decodeBase64()
+                val dataVideo = player.attr("data-video")?.decodeBase64()
+                val dataFrame = player.attr("data-frame")?.decodeBase64()
                 
                 val videoUrl = when {
                     !dataEmbed.isNullOrEmpty() -> dataEmbed
                     !dataSrc.isNullOrEmpty() -> dataSrc
                     !dataVideo.isNullOrEmpty() -> dataVideo
+                    !dataFrame.isNullOrEmpty() -> dataFrame
                     else -> null
                 }
                 
                 if (!videoUrl.isNullOrEmpty()) {
                     Log.d("DDizi:", "Found player source: $videoUrl")
-                    loadExtractor(videoUrl, data, subtitleCallback, callback)
+                    loadExtractor(fixUrl(videoUrl), data, subtitleCallback, callback)
                 }
             }
         } catch (e: Exception) {
             Log.d("DDizi:", "Error parsing video players: ${e.message}")
+        }
+
+        // İframe'leri kontrol et
+        try {
+            document.select("iframe").forEach { iframe ->
+                val iframeSrc = iframe.attr("src")?.decodeBase64() ?: iframe.attr("src")
+                if (!iframeSrc.isNullOrEmpty()) {
+                    Log.d("DDizi:", "Found iframe source: $iframeSrc")
+                    loadExtractor(fixUrl(iframeSrc), data, subtitleCallback, callback)
+                }
+            }
+        } catch (e: Exception) {
+            Log.d("DDizi:", "Error parsing iframes: ${e.message}")
         }
 
         // Meta og:video etiketini kontrol et
@@ -563,5 +569,15 @@ class DDiziProvider : MainAPI() {
                 "referer" to referer
             )
         }
+    }
+}
+
+
+// Base64 decode helper fonksiyonu
+private fun String.decodeBase64(): String? {
+    return try {
+        String(android.util.Base64.decode(this, android.util.Base64.DEFAULT))
+    } catch (e: Exception) {
+        null
     }
 }
