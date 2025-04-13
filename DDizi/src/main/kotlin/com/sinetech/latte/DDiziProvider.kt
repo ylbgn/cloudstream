@@ -371,24 +371,24 @@ class DDiziProvider : MainAPI() {
                                 val fileUrl = fileMatch.groupValues[1]
                                 Log.d("DDizi:", "Found video source: $fileUrl")
                                 
-                                val isM3u8 = fileUrl.contains(".m3u8")
+                                val type = if (fileUrl.contains(".m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
                                 
                                 callback.invoke(
-                                    newExtractorLink(
-                                        this.name,
-                                        this.name,
-                                        fileUrl,
-                                        ogVideo,
-                                        Qualities.Unknown.value,
-                                        isM3u8 = isM3u8
+                                    ExtractorLink(
+                                        source = this.name,
+                                        name = this.name,
+                                        url = fileUrl,
+                                        referer = ogVideo,
+                                        quality = Qualities.Unknown.value,
+                                        type = type
                                     )
                                 )
                                 
-                                if (isM3u8) {
+                                if (type == ExtractorLinkType.M3U8) {
                                     M3u8Helper.generateM3u8(
-                                        this.name,
-                                        fileUrl,
-                                        ogVideo
+                                        source = this.name,
+                                        streamUrl = fileUrl,
+                                        referer = ogVideo
                                     ).forEach(callback)
                                 }
                             }
