@@ -308,12 +308,27 @@ class DDiziProvider : MainAPI() {
                         
                         Log.d("DDizi:", "Episode: $name, Season: $epSeasonNumber (default: 1), Episode: $episodeNumber, Final: $epIsSeasonFinal, Comments: $epCommentCount")
                         
+                        // Episode constructor düzeltmesi
                         Episode(
-                            href,
-                            name,
-                            epSeasonNumber,
-                            epEpisodeNumber,
-                            description = epDescription
+                            data = href,
+                            name = name,
+                            season = epSeasonNumber,
+                            episode = epEpisodeNumber,
+                            description = epDescription,
+                        ).apply {
+                            this.posterUrl = posterUrl
+                        }
+                        
+                        // ExtractorLink düzeltmesi
+                        callback.invoke(
+                            newExtractorLink(
+                                source = name,
+                                name = "$name - $quality",
+                                url = fileUrl,
+                                referer = ogVideo,
+                                quality = getQualityFromName(quality),
+                                headers = getHeaders(ogVideo)
+                            )
                         )
                     }
                     Log.d("DDizi:", "Found ${eps.size} episodes")
