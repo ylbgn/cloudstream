@@ -17,6 +17,11 @@ class DDiziProvider : MainAPI() {
     override val hasDownloadSupport   = true
     override val supportedTypes      = setOf(TvType.TvSeries)
 
+     // ! CloudFlare bypass
+     override var sequentialMainPage = true        // * https://recloudstream.github.io/dokka/-cloudstream/com.lagradost.cloudstream3/-main-a-p-i/index.html#-2049735995%2FProperties%2F101969414
+     override var sequentialMainPageDelay       = 50L  // ? 0.05 saniye
+     override var sequentialMainPageScrollDelay = 50L  // ? 0.05 saniye
+
     override val mainPage = mainPageOf(
         "$mainUrl/yeni-eklenenler1" to "Son Eklenen Bölümler",
         "$mainUrl/yabanci-dizi-izle" to "Yabancı Diziler",
@@ -349,9 +354,45 @@ class DDiziProvider : MainAPI() {
         Log.d("DDizi:", "Loading links for $data")
         val document = app.get(data, headers = getHeaders(mainUrl)).document
         
+        // İlk olarak iframe'leri kontrol et
+        try {
+            document.select("iframe").forEach { iframe ->
+                val iframeSrc = iframe.attr("src")
+                if (!iframeSrc.isNullOrEmpty()) {
+                    Log.d("DDizi:", "Found iframe source: $iframeSrc")
+                    loadExtractor(iframeSrc, data, subtitleCallback, callback)
+                }
+            }
+        } catch (e: Exception) {
+            Log.d("DDizi:", "Error parsing iframes: ${e.message}")
+        }
+
+        // Video player div'lerini kontrol et
+        try {
+            document.select("div#video-player, div.player-embed, div.player, div.video-player").forEach { player ->
+                val dataEmbed = player.attr("data-embed")
+                val dataSrc = player.attr("data-src")
+                val dataVideo = player.attr("data-video")
+                
+                val videoUrl = when {
+                    !dataEmbed.isNullOrEmpty() -> dataEmbed
+                    !dataSrc.isNullOrEmpty() -> dataSrc
+                    !dataVideo.isNullOrEmpty() -> dataVideo
+                    else -> null
+                }
+                
+                if (!videoUrl.isNullOrEmpty()) {
+                    Log.d("DDizi:", "Found player source: $videoUrl")
+                    loadExtractor(videoUrl, data, subtitleCallback, callback)
+                }
+            }
+        } catch (e: Exception) {
+            Log.d("DDizi:", "Error parsing video players: ${e.message}")
+        }
+
         // Meta og:video etiketini kontrol et
         try {
-            val ogVideo = document.selectFirst("meta[property=og:video]")?.attr("content")
+            val ogVideo = document.selectFirst("meta[property=og:video], meta[property=og:video:url]")?.attr("content")
             if (!ogVideo.isNullOrEmpty()) {
                 Log.d("DDizi:", "Found og:video meta tag: $ogVideo")
                 
@@ -495,7 +536,7 @@ class DDiziProvider : MainAPI() {
         } catch (e: Exception) {
             Log.d("DDizi:", "Error parsing og:video meta tag: ${e.message}")
         }
-        
+
 
         return true
     }
