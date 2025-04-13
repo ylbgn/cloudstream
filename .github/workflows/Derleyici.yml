@@ -31,8 +31,8 @@ jobs:
           ref: "builds"
           path: "builds"
 
-      - name: Eski Derlemeleri Temizle (GolgeTV.cs3 ve DDizi.cs3 hariç)
-        run: find $GITHUB_WORKSPACE/builds -name '*.cs3' ! -name 'GolgeTV.cs3' ! -name 'DDizi.cs3' -delete
+      - name: Eski Derlemeleri Temizle (GolgeTV.cs3 hariç)
+        run: find $GITHUB_WORKSPACE/builds -name '*.cs3' ! -name 'GolgeTV.cs3' -delete
 
       - name: JDK 17 Ayarla
         uses: actions/setup-java@v4.6.0
@@ -51,7 +51,7 @@ jobs:
           cp **/build/*.cs3 $GITHUB_WORKSPACE/builds
           cp build/plugins.json $GITHUB_WORKSPACE/builds
 
-      - name: jq Araçlarını Kur (GolgeTV ve DDizi eklemeleri için)
+      - name: jq Araçlarını Kur (GolgeTV eklemesi için)
         run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: GolgeTV Eklentisini plugins.json'a Elle Ekle
@@ -77,33 +77,11 @@ jobs:
             echo "GolgeTV zaten plugins.json'da mevcut, eklenmedi."
           fi
 
-      - name: DDizi Eklentisini plugins.json'a Elle Ekle
-        run: |
-          cd $GITHUB_WORKSPACE/builds
-          if ! jq -e '.[] | select(.internalName == "DDizi")' plugins.json > /dev/null; then
-            jq '. += [{
-              "repositoryUrl": "https://github.com/nikyokki/nik-cloudstream",
-              "apiVersion": 1,
-              "status": 1,
-              "language": "tr",
-              "authors": ["yunus60"],
-              "tvTypes": ["Live"],
-              "version": 1,
-              "internalName": "DDizi",
-              "description": "DDizi.im için CloudStream eklentisi",
-              "url": "https://raw.githubusercontent.com/nikyokki/nik-cloudstream/builds/DDizi.cs3",
-              "name": "DDizi",
-              "iconUrl": "https://raw.githubusercontent.com/yunus60/cloudstream-providers/main/builds/DDizi.png"
-            }]' plugins.json > plugins-new.json && mv plugins-new.json plugins.json
-          else
-            echo "DDizi zaten plugins.json'da mevcut, eklenmedi."
-          fi
-
       - name: Derlemeleri Yükle
         run: |
           cd $GITHUB_WORKSPACE/builds
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
           git add .
-          git commit -m "Yeni Derleme: $GITHUB_SHA" || exit 0  # Commit yapmadan önce eski commit'i değiştirme
+          git commit -m "Yeni Derleme: $GITHUB_SHA" || exit 0
           git push --force
