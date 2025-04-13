@@ -3,6 +3,7 @@ package com.sinetech.latte
 import android.util.Log
 import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
+import com.lagradost.cloudstream3.utils.M3u8Helper
 import com.lagradost.cloudstream3.LoadResponse.Companion.addTrailer
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.newExtractorLink
@@ -353,7 +354,7 @@ class DDiziProvider : MainAPI() {
                 
                 // Video bağlantısına istek at ve jwplayer yapılandırmasını bul
                 val playerDoc = app.get(
-                    ogVideo.trim(), 
+                    ogVideo, 
                     headers = getHeaders(data)
                 ).document
                 val scripts = playerDoc.select("script")
