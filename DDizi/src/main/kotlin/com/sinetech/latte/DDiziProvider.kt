@@ -354,43 +354,48 @@ class DDiziProvider : MainAPI() {
             if (!ogVideo.isNullOrEmpty()) {
                 Log.d("DDizi:", "Found og:video meta tag: $ogVideo")
                 
-                // Player sayfasını yükle ve iframe içindeki kaynağı bul
-                val playerDoc = app.get(ogVideo, headers = getHeaders(data)).document
-                val iframeSrc = playerDoc.select("iframe").firstOrNull()?.attr("src")
+                val playerDoc = app.get(ogVideo, headers = getHeaders(mainUrl)).document
+                val scripts = playerDoc.select("script")
                 
-                if (!iframeSrc.isNullOrEmpty()) {
-                    val videoPageUrl = if (iframeSrc.startsWith("http")) iframeSrc else "https:$iframeSrc"
-                    val videoPage = app.get(videoPageUrl, headers = getHeaders(ogVideo)).text
-                    
-                    // Video URL'sini bul
-                    val sourceMatch = Regex("""file["']?\s*:\s*["']([^"']+)["']""").find(videoPage)
-                    val videoUrl = sourceMatch?.groupValues?.get(1)
-                    
-                    if (!videoUrl.isNullOrEmpty()) {
-                        Log.d("DDizi:", "Found video URL: $videoUrl")
+                scripts.forEach { script ->
+                    val content = script.data()
+                    if (content.contains("jwplayer")) {
+                        val sourcesRegex = Regex("""sources:\s*\[\s*\{(.*?)\}\s*\]""", RegexOption.DOT_MATCHES_ALL)
+                        val sourcesMatch = sourcesRegex.find(content)
                         
-                        val quality = when {
-                            videoUrl.contains("1080") -> Qualities.P1080.value
-                            videoUrl.contains("720") -> Qualities.P720.value
-                            videoUrl.contains("480") -> Qualities.P480.value
-                            videoUrl.contains("360") -> Qualities.P360.value
-                            else -> Qualities.Unknown.value
+                        if (sourcesMatch != null) {
+                            val fileRegex = Regex("""file:\s*["'](.*?)["']""")
+                            val fileMatch = fileRegex.find(sourcesMatch.groupValues[1])
+                            
+                            if (fileMatch != null) {
+                                val fileUrl = fileMatch.groupValues[1]
+                                Log.d("DDizi:", "Found video source: $fileUrl")
+                                
+                                val isM3u8 = fileUrl.contains(".m3u8")
+                                
+                                callback.invoke(
+                                    newExtractorLink(
+                                        this.name,
+                                        this.name,
+                                        fileUrl,
+                                        ogVideo,
+                                        Qualities.Unknown.value,
+                                        isM3u8 = isM3u8
+                                    )
+                                )
+                                
+                                if (isM3u8) {
+                                    M3u8Helper.generateM3u8(
+                                        this.name,
+                                        fileUrl,
+                                        ogVideo
+                                    ).forEach(callback)
+                                }
+                            }
                         }
-                        
-                        callback.invoke(
-                            ExtractorLink(
-                                source = this.name,
-                                name = this.name,
-                                url = videoUrl,
-                                referer = videoPageUrl,
-                                quality = quality,
-                                headers = getHeaders(videoPageUrl)
-                            )
-                        )
                     }
                 }
                 
-                // Yedek olarak normal extractorları dene
                 loadExtractor(ogVideo, data, subtitleCallback, callback)
             }
         } catch (e: Exception) {
