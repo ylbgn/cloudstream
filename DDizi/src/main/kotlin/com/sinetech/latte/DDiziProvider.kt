@@ -240,7 +240,7 @@ class DDiziProvider : MainAPI() {
                     this.season = epSeasonNumber
                     this.episode = epEpisodeNumber
                     this.description = epDescription
-                    this.posterUrl = posterImg?.attr("src")
+                    this.posterUrl = posterImg?.attr("src")?.let { fixUrlNull(it) }
                 }
             }
 
@@ -455,11 +455,11 @@ class DDiziProvider : MainAPI() {
                                 )
                                 callback.invoke(
                                     newExtractorLink(
-                                        source = this.name,
+                                        this.name,
                                         name = "$name - $quality",
-                                        url = fileUrl,
-                                        referer = data,
-                                        quality = getQualityFromName(quality)
+                                        fileUrl,
+                                        data,
+                                        getQualityFromName(quality)
                                     )
                                 )
                             }
