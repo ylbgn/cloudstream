@@ -235,13 +235,13 @@ class DDiziProvider : MainAPI() {
                 
                 Log.d("DDizi:", "Found episode: $name, Season: $epSeasonNumber, Episode: $epEpisodeNumber, Final: $epIsSeasonFinal, Comments: $epCommentCount")
                 
-                Episode(
-                    href,
-                    name,
-                    epSeasonNumber,
-                    epEpisodeNumber,
-                    description = epDescription
-                )
+                newEpisode(href) {
+                    this.name = name
+                    this.season = epSeasonNumber
+                    this.episode = epEpisodeNumber
+                    this.description = epDescription
+                    this.posterUrl = poster
+                }
             }
 
             if (pageEpisodes.isNotEmpty()) {
@@ -444,14 +444,23 @@ class DDiziProvider : MainAPI() {
                                 val qualityMatch = qualityRegex.find(sourcesMatch.groupValues[1])
                                 val quality = qualityMatch?.groupValues?.get(1) ?: "Auto"
                                 
+                                // Tek bölüm için düzeltme
+                                allEpisodes.add(
+                                    newEpisode(url) {
+                                        this.name = fullTitle
+                                        this.season = seasonNumber
+                                        this.episode = episodeNumber
+                                        this.description = plot
+                                        this.posterUrl = poster
+                                    }
+                                )
                                 callback.invoke(
-                                    ExtractorLink(
-                                        source = name,
+                                    newExtractorLink(
+                                        source = this.name,
                                         name = "$name - $quality",
                                         url = fileUrl,
-                                        referer = ogVideo,
-                                        quality = getQualityFromName(quality),
-                                        headers = getHeaders(ogVideo)
+                                        referer = data,
+                                        quality = getQualityFromName(quality)
                                     )
                                 )
                             }
