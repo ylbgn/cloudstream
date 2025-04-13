@@ -354,72 +354,43 @@ class DDiziProvider : MainAPI() {
             if (!ogVideo.isNullOrEmpty()) {
                 Log.d("DDizi:", "Found og:video meta tag: $ogVideo")
                 
+                // Player sayfasını yükle ve iframe içindeki kaynağı bul
                 val playerDoc = app.get(ogVideo, headers = getHeaders(data)).document
+                val iframeSrc = playerDoc.select("iframe").firstOrNull()?.attr("src")
                 
-                // Video kaynağını bul
-                val videoUrl = playerDoc.select("source").firstOrNull()?.attr("src")
-                    ?: playerDoc.select("video").firstOrNull()?.attr("src")
-                
-                if (!videoUrl.isNullOrEmpty()) {
-                    Log.d("DDizi:", "Found direct video source: $videoUrl")
+                if (!iframeSrc.isNullOrEmpty()) {
+                    val videoPageUrl = if (iframeSrc.startsWith("http")) iframeSrc else "https:$iframeSrc"
+                    val videoPage = app.get(videoPageUrl, headers = getHeaders(ogVideo)).text
                     
-                    val quality = when {
-                        videoUrl.contains("1080") -> "1080p"
-                        videoUrl.contains("720") -> "720p"
-                        videoUrl.contains("480") -> "480p"
-                        videoUrl.contains("360") -> "360p"
-                        else -> "Auto"
-                    }
+                    // Video URL'sini bul
+                    val sourceMatch = Regex("""file["']?\s*:\s*["']([^"']+)["']""").find(videoPage)
+                    val videoUrl = sourceMatch?.groupValues?.get(1)
                     
-                    val isM3u8 = videoUrl.contains(".m3u8")
-                    
-                    callback.invoke(
-                        ExtractorLink(
-                            source = this.name,
-                            name = "${this.name} - $quality",
-                            url = videoUrl,
-                            referer = ogVideo,
-                            quality = getQualityFromName(quality),
-                            headers = getHeaders(ogVideo),
-                            type = if (isM3u8) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
-                        )
-                    )
-                    
-                    if (isM3u8) {
-                        M3u8Helper.generateM3u8(
-                            source = this.name,
-                            streamUrl = videoUrl,
-                            referer = ogVideo,
-                            headers = getHeaders(ogVideo)
-                        ).forEach(callback)
-                    }
-                } else {
-                    // Alternatif olarak jwplayer kaynaklarını dene
-                    playerDoc.select("script").forEach { script ->
-                        if (script.data().contains("jwplayer")) {
-                            val sourceMatch = Regex("""file:\s*["'](.*?)["']""").find(script.data())
-                            val foundUrl = sourceMatch?.groupValues?.get(1)
-                            
-                            if (!foundUrl.isNullOrEmpty()) {
-                                Log.d("DDizi:", "Found JWPlayer source: $foundUrl")
-                                
-                                callback.invoke(
-                                    ExtractorLink(
-                                        source = this.name,
-                                        name = "${this.name} - Auto",
-                                        url = foundUrl,
-                                        referer = ogVideo,
-                                        quality = Qualities.Unknown.value,
-                                        headers = getHeaders(ogVideo),
-                                        type = if (foundUrl.contains(".m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
-                                    )
-                                )
-                            }
+                    if (!videoUrl.isNullOrEmpty()) {
+                        Log.d("DDizi:", "Found video URL: $videoUrl")
+                        
+                        val quality = when {
+                            videoUrl.contains("1080") -> Qualities.P1080.value
+                            videoUrl.contains("720") -> Qualities.P720.value
+                            videoUrl.contains("480") -> Qualities.P480.value
+                            videoUrl.contains("360") -> Qualities.P360.value
+                            else -> Qualities.Unknown.value
                         }
+                        
+                        callback.invoke(
+                            ExtractorLink(
+                                source = this.name,
+                                name = this.name,
+                                url = videoUrl,
+                                referer = videoPageUrl,
+                                quality = quality,
+                                headers = getHeaders(videoPageUrl)
+                            )
+                        )
                     }
                 }
                 
-                // Normal extractorları da dene
+                // Yedek olarak normal extractorları dene
                 loadExtractor(ogVideo, data, subtitleCallback, callback)
             }
         } catch (e: Exception) {
