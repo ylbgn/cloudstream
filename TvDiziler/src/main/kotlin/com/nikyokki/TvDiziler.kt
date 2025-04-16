@@ -40,7 +40,7 @@ class TvDiziler : MainAPI() {
 
     private fun Element.diziler(): SearchResponse? {
         val title =
-            this.selectFirst("div.poster-long-subject h2")?.text() ?: return null
+            this.selectFirst("div.poster-long-subject h2")?.text()?.replace(" izle", "") ?: return null
         val href =
             fixUrlNull(this.selectFirst("div.poster-long-subject a")?.attr("href"))
                 ?: return null
@@ -59,7 +59,7 @@ class TvDiziler : MainAPI() {
     }
 
     private fun Element.toPostSearchResult(): SearchResponse? {
-        val title = this.selectFirst("h3.truncate")?.text()?.trim() ?: return null
+        val title = this.selectFirst("h3.truncate")?.text()?.trim()?.replace(" izle", "") ?: return null
         val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
 
@@ -112,19 +112,20 @@ class TvDiziler : MainAPI() {
 
     override suspend fun load(url: String): LoadResponse? {
         Log.d("TVD", "Load -> url")
+        println("Load -> url")
         val mainReq = app.get(url, referer = mainUrl)
         val document = mainReq.document
-        val title = document.selectFirst("div.page-title h1")?.selectFirst("a")?.text() ?: return null
+        val title = document.selectFirst("div.page-title p")?.text()?.replace(" izle", "") ?: "return null"
         Log.d("TVD", "title -> $title")
         val poster =
-            fixUrlNull(document.selectFirst("div.series-profile-image img")?.attr("src"))
+            fixUrlNull(document.selectFirst("div.series-profile-image img")?.attr("data-src"))
         Log.d("TVD", "poster -> $poster")
         val year =
             document.selectFirst("h1 span")?.text()?.substringAfter("(")?.substringBefore(")")
                 ?.toIntOrNull()
         Log.d("TVD", "year -> $year")
 
-        val rating = document.selectFirst("//span[text()='IMDb Puanı']//following-sibling::p")?.text()?.trim()?.toRatingInt()
+        val rating = document.selectXpath("//span[text()='IMDb Puanı']//following-sibling::p").text().trim().toRatingInt()
         Log.d("TVD", "rating -> $rating")
 
         val duration =
