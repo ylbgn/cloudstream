@@ -1,6 +1,7 @@
 package com.nikyokki
 
 import android.util.Log
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -24,17 +25,38 @@ class TvDiziler : MainAPI() {
     override val supportedTypes       = setOf(TvType.TvSeries)
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/dizi/tur/aile/"      to "Aile",
+        mainUrl                         to "Son Bölümler",
+        "${mainUrl}/dizi/tur/aile"      to "Aile",
+        "${mainUrl}/dizi/tur/aksiyon"      to "Aksiyon",
+        "${mainUrl}/dizi/tur/aksiyon-macera"      to "Aksiyon-Macera",
+        "${mainUrl}/dizi/tur/bilim-kurgu-fantazi"      to "Bilim Kurgu & Fantazi",
+        "${mainUrl}/dizi/tur/fantastik"      to "Fantastik",
+        "${mainUrl}/dizi/tur/gerilim"      to "Gerilim",
+        "${mainUrl}/dizi/tur/gizem"      to "Gizem",
+        "${mainUrl}/dizi/tur/komedi"      to "Komedi",
+        "${mainUrl}/dizi/tur/korku"      to "Korku",
+        "${mainUrl}/dizi/tur/macera"      to "Macera",
+        "${mainUrl}/dizi/tur/pembe-dizi"      to "Pembe Dizi",
+        "${mainUrl}/dizi/tur/romantik"      to "Romantik",
+        "${mainUrl}/dizi/tur/savas"      to "Savaş",
+        "${mainUrl}/dizi/tur/savas-politik"      to "Savaş & Politik",
+        "${mainUrl}/dizi/tur/suc"      to "Suç",
+        "${mainUrl}/dizi/tur/talk"      to "Talk",
+        "${mainUrl}/dizi/tur/tarih"      to "Tarih",
+        "${mainUrl}/dizi/tur/yarisma"      to "Yarışma",
 
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
+        if (request.name == "Son Bölümler") {
+            val mainReq = app.get(request.data)
+            val document = mainReq.document.body()
+            val home = document.select("div.poster-xs").mapNotNull { it.sonBolumler() }
+            return newHomePageResponse(request.name, home)
+        }
         val mainReq = app.get("${request.data}/${page}")
-
         val document = mainReq.document.body()
-        //val document = Jsoup.parse(mainReq.body.string())
         val home = document.select("div.poster-long").mapNotNull { it.diziler() }
-
         return newHomePageResponse(request.name, home)
     }
 
@@ -58,12 +80,26 @@ class TvDiziler : MainAPI() {
         }
     }
 
+    private fun Element.sonBolumler(): SearchResponse? {
+        val title =
+            this.selectFirst("div.poster-xs-subject p")?.text()?.replace(" izle", "") ?: return null
+        val href =
+            fixUrlNull(this.selectFirst("a")?.attr("href"))
+                ?: return null
+        val posterUrl =
+            fixUrlNull(this.selectFirst("div.poster-xs-image img")?.attr("data-src"))
+
+        return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
+            this.posterUrl = posterUrl
+        }
+    }
+
     private fun Element.toPostSearchResult(): SearchResponse? {
         val title = this.selectFirst("h3.truncate")?.text()?.trim()?.replace(" izle", "") ?: return null
         val href = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
 
-        if (href.contains("/dizi/")) {
+        if (href.contains("dizi/")) {
             return newTvSeriesSearchResponse(title, href, TvType.TvSeries) {
                 this.posterUrl = posterUrl
             }
@@ -100,7 +136,7 @@ class TvDiziler : MainAPI() {
 
         document.select("ul li").forEach { listItem ->
             val href = listItem.selectFirst("a")?.attr("href")
-            if (href != null && (href.contains("/dizi/") || href.contains("/film/"))) {
+            if (href != null && (href.contains("dizi/") || href.contains("film/"))) {
                 val result = listItem.toPostSearchResult()
                 result?.let { results.add(it) }
             }
@@ -113,6 +149,27 @@ class TvDiziler : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         Log.d("TVD", "Load -> url")
         println("Load -> url")
+        if (!url.contains("/dizi/")) {
+            val mainReq = app.get(url, referer = mainUrl)
+            val document = mainReq.document
+            val title = document.selectFirst("div.page-title h1")?.text()?.replace(" izle", "") ?: "return null"
+            val epEpisode = document.selectFirst("div.page-title h1 span")?.text()?.replace(" izle", "")?.toIntOrNull()
+            val poster = document.selectFirst("meta[property=og:image]")?.attr("content")
+            val description = document.selectFirst("meta[name=og:description]")?.attr("content")
+            val episodeses = mutableListOf<Episode>()
+            episodeses.add(
+                newEpisode(url) {
+                    this.name = title
+                    this.season = 1
+                    this.episode = epEpisode
+                })
+
+            return newTvSeriesLoadResponse(title, url, TvType.TvSeries, episodeses) {
+                this.posterUrl = poster
+                this.plot = description
+            }
+
+        }
         val mainReq = app.get(url, referer = mainUrl)
         val document = mainReq.document
         val title = document.selectFirst("div.page-title p")?.text()?.replace(" izle", "") ?: "return null"
@@ -189,36 +246,94 @@ class TvDiziler : MainAPI() {
         }
     }
 
-    private fun Element.toRecommendationResult(): SearchResponse? {
-        val title     = this.selectFirst("a img")?.attr("alt") ?: return null
-        val href      = fixUrlNull(this.selectFirst("a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("a img")?.attr("data-src"))
-
-        return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
-    }
-
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
         val headers = mapOf(
             "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Referer" to "$mainUrl/"
         )
-        val aa = app.get(mainUrl)
-        val ciSession = aa.cookies["ci_session"].toString()
+
         val document = app.get(
-            data, headers = headers, cookies = mapOf(
-                "ci_session" to ciSession
-            )
+            data, headers = headers
         ).document
         val iframe =
-            fixUrlNull(document.selectFirst("div#tv-spoox2 iframe")?.attr("src")) ?: return false
+            fixUrlNull(document.selectFirst("li.series-alter-active button")?.attr("data-hhs")) ?: return false
         Log.d("TVD", "Iframe -> $iframe")
-        loadExtractor(iframe, referer = "$mainUrl/", subtitleCallback, callback)
+        if (iframe.contains("youtube.com")) {
+            val id = iframe.substringAfter("/embed/").substringBefore("?")
+            loadExtractor(
+                "https://youtube.com/watch?v=$id",
+                subtitleCallback,
+                callback
+            )
+            callback(
+                newExtractorLink(
+                    "Youtube",
+                    "Youtube",
+                    "https://nyc1.iv.ggtyler.dev/api/manifest/dash/id/$id",
+                    ExtractorLinkType.DASH
+                ) {
+                    this.referer = ""
+                    this.headers = mapOf()
+                    this.quality = Qualities.Unknown.value
+                    this.extractorData = null
+                }
+            )
+        } else {
+            val ifDoc = app.get(
+                iframe,
+                headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0",
+                    "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language" to "en-US,en;q=0.5"),
+                referer = mainUrl
+            ).document
+            val script = ifDoc.select("script").find { it.data().contains("sources:") }?.data() ?: ""
+            val videoData = script.substringAfter("sources: [")
+                .substringBefore("],").addMarks("file").addMarks("type").addMarks("label")
+            val objectMapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-
+            val source: TvDiziFile = objectMapper.readValue(videoData)
+            if (source.type == "hls") {
+                callback.invoke(
+                    newExtractorLink(
+                        source = this.name,
+                        name = this.name,
+                        url = source.file,
+                        ExtractorLinkType.M3U8
+                    ) {
+                        this.referer = "$mainUrl/"
+                        this.quality = getQualityFromName(source.label)
+                    }
+                )
+            } else if (source.type == "mp4") {
+                callback.invoke(
+                    newExtractorLink(
+                        source = this.name,
+                        name = this.name,
+                        url = source.file,
+                        ExtractorLinkType.VIDEO
+                    ) {
+                        this.referer = "$mainUrl/"
+                        this.quality = getQualityFromName(source.label)
+                    }
+                )
+            }
+        }
         return true
     }
+    private fun String.addMarks(str: String): String {
+        return this.replace(Regex("\"?$str\"?"), "\"$str\"")
+    }
 }
+
+data class TvDiziFile(
+    @JsonProperty("file") val file: String,
+    @JsonProperty("label") val label: String,
+    @JsonProperty("type") val type: String
+)
+
+
 class TvDizilerOynat : JWPlayer() {
     override val name = "TvDizilerOynat"
     override val mainUrl = "https://tvdiziler.cc/player/oynat/"
