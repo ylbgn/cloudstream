@@ -17,6 +17,7 @@ open class TauVideo : ExtractorApi() {
     val videoKey = url.split("/").last()
     val videoUrl = "${mainUrl}/api/video/${videoKey}"
     Log.d("Kekik_${this.name}", "videoUrl » $videoUrl")
+    println("videoUrl » $videoUrl")
 
     val api = app.get(videoUrl).parsedSafe<TauVideoUrls>() ?: throw ErrorLoadingException("TauVideo")
 
@@ -26,7 +27,7 @@ open class TauVideo : ExtractorApi() {
                 source = this.name,
                 name = this.name,
                 url = video.url,
-                type = INFER_TYPE
+                type = ExtractorLinkType.VIDEO
             ) {
                 headers = mapOf("Referer" to extRef)
                 quality = getQualityFromName(video.label)
