@@ -59,12 +59,10 @@ class FilmMakinesi : MainAPI() {
         val href = fixUrlNull(this.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("div.thumbnail-outer > img.thumbnail")?.attr("src"))
         val year = this.selectFirst("div.item-footer > div.info > span:first-child")?.text()?.toIntOrNull()
-        val rating = this.attr("data-score")?.toRatingInt()
 
         return newMovieSearchResponse(title, href, TvType.Movie) { 
             this.posterUrl = posterUrl
             this.year = year
-            this.rating = rating
         }
     }
 
