@@ -50,21 +50,21 @@ class FilmMakinesi : MainAPI() {
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val document = app.get("${request.data}${page}").document
-        val home     = if (request.data.contains("/film-izle/")) {
-            document.select("section#film_posts article").mapNotNull { it.toSearchResult() }
-        } else {
-            document.select("section#film_posts div.tooltip").mapNotNull { it.toSearchResult() }
-        }
-
+        val home = document.select("div.item-relative a.item").mapNotNull { it.toSearchResult() }
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val title     = this.selectFirst("h6 a")?.text() ?: return null
-        val href      = fixUrlNull(this.selectFirst("h6 a")?.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src")) ?: fixUrlNull(this.selectFirst("img")?.attr("src"))
+        val title = this.selectFirst("div.title")?.text() ?: return null
+        val href = fixUrlNull(this.attr("href")) ?: return null
+        val posterUrl = fixUrlNull(this.selectFirst("img.thumbnail")?.attr("src"))
 
         return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
+    }
+
+    override suspend fun search(query: String): List<SearchResponse> {
+        val document = app.get("${mainUrl}?s=${query}").document
+        return document.select("div.item-relative a.item").mapNotNull { it.toSearchResult() }
     }
 
     private fun Element.toRecommendResult(): SearchResponse? {
