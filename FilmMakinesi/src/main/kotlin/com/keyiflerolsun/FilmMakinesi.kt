@@ -44,11 +44,17 @@ class FilmMakinesi : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val url = "${request.data}${page}"
         val document = app.get(url).document
-        val home = document.select("div.col-6 div.item-relative > a.item").mapNotNull { it.toSearchResult() }
+
+        // Daha esnek bir seçici: tüm grid class'larını kapsar
+        val home = document.select("div[class^=col-] div.item-relative > a.item").mapNotNull { it.toSearchResult() }
+
+        Log.d("FilmMakinesi", "URL: $url, Found films: ${home.size}")
+
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
+        // this artık doğrudan a.item elementi!
         val title = this.attr("data-title").ifBlank {
             this.selectFirst("div.item-footer > div.title")?.text() ?: return null
         }
