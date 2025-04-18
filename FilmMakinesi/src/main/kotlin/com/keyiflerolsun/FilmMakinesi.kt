@@ -44,14 +44,14 @@ class FilmMakinesi : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val document = app.get("${request.data}${page}").document
 
-        // Güncel film kartı seçici (daha önce düzeltildi)
+        // Doğru film kartı seçimi ve bilgi çekme
         val home = document.select("div.col-6.col-md-4.col-xl-2").mapNotNull { col ->
             val link = col.selectFirst("a.item") ?: return@mapNotNull null
             val title = link.attr("data-title").ifBlank { link.attr("title") }
             if (title.isBlank()) return@mapNotNull null
             val href = fixUrlNull(link.attr("href")) ?: return@mapNotNull null
-            val posterUrl = fixUrlNull(col.selectFirst("img.thumbnail")?.attr("src"))
-            val year = col.selectFirst("div.info > span")?.text()?.toIntOrNull()
+            val posterUrl = fixUrlNull(link.selectFirst("img.thumbnail")?.attr("src"))
+            val year = col.selectFirst("div.item-footer div.info > span")?.text()?.toIntOrNull()
             newMovieSearchResponse(title, href, TvType.Movie) {
                 this.posterUrl = posterUrl
                 this.year = year
@@ -70,8 +70,8 @@ class FilmMakinesi : MainAPI() {
             val title = link.attr("data-title").ifBlank { link.attr("title") }
             if (title.isBlank()) return@mapNotNull null
             val href = fixUrlNull(link.attr("href")) ?: return@mapNotNull null
-            val posterUrl = fixUrlNull(col.selectFirst("img.thumbnail")?.attr("src"))
-            val year = col.selectFirst("div.info > span")?.text()?.toIntOrNull()
+            val posterUrl = fixUrlNull(link.selectFirst("img.thumbnail")?.attr("src"))
+            val year = col.selectFirst("div.item-footer div.info > span")?.text()?.toIntOrNull()
             newMovieSearchResponse(title, href, TvType.Movie) {
                 this.posterUrl = posterUrl
                 this.year = year
