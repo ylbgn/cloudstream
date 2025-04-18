@@ -68,20 +68,15 @@ class FilmMakinesi : MainAPI() {
     }
 
     private fun Element.toRecommendResult(): SearchResponse? {
-        val title     = this.select("a").last()?.text() ?: return null
-        val href      = fixUrlNull(this.select("a").last()?.attr("href")) ?: return null
+        val title = this.select("a").last()?.text() ?: return null
+        val href = fixUrlNull(this.select("a").last()?.attr("href")) ?: return null
         val posterUrl = fixUrlNull(this.selectFirst("img")?.attr("data-src"))
 
         return newMovieSearchResponse(title, href, TvType.Movie) { this.posterUrl = posterUrl }
     }
 
-    override suspend fun search(query: String): List<SearchResponse> {
-        val document = app.get("${mainUrl}?s=${query}").document
-
-        return document.select("section#film_posts article").mapNotNull { it.toSearchResult() }
-    }
-
     override suspend fun quickSearch(query: String): List<SearchResponse> = search(query)
+
 
     override suspend fun load(url: String): LoadResponse? {
         val document = app.get(url).document
