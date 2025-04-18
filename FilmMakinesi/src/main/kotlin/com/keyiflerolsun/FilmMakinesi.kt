@@ -45,22 +45,20 @@ class FilmMakinesi : MainAPI() {
         val url = "${request.data}${page}"
         val document = app.get(url).document
 
-        // Daha esnek bir seçici: tüm grid class'larını kapsar
-        val home = document.select("div[class^=col-] div.item-relative > a.item").mapNotNull { it.toSearchResult() }
-
-        Log.d("FilmMakinesi", "URL: $url, Found films: ${home.size}")
+        // Daha basit bir seçici kullanarak tüm film kartlarını bul
+        val home = document.select("a.item[data-title]").mapNotNull { it.toSearchResult() }
 
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        // this artık doğrudan a.item elementi!
-        val title = this.attr("data-title").ifBlank {
-            this.selectFirst("div.item-footer > div.title")?.text() ?: return null
-        }
+        val title = this.attr("data-title")
+        if (title.isBlank()) return null
+        
         val href = fixUrlNull(this.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("div.thumbnail-outer > img.thumbnail")?.attr("src"))
-        val year = this.selectFirst("div.item-footer > div.info > span:first-child")?.text()?.toIntOrNull()
+        val posterUrl = fixUrlNull(this.selectFirst("img.thumbnail")?.attr("src"))
+        val year = this.selectFirst("div.info > span:first-child")?.text()?.toIntOrNull()
+        
         return newMovieSearchResponse(title, href, TvType.Movie) {
             this.posterUrl = posterUrl
             this.year = year
