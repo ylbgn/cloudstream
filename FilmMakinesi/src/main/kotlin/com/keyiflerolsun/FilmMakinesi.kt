@@ -44,18 +44,17 @@ class FilmMakinesi : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val url = "${request.data}${page}"
         val document = app.get(url).document
-        val home = document.select("div.col-6 div.item-relative").mapNotNull { it.toSearchResult() }
+        val home = document.select("div.col-6 div.item-relative > a.item").mapNotNull { it.toSearchResult() }
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val link = this.selectFirst("a.item") ?: return null
-        val title = link.attr("data-title").ifBlank { 
-            link.selectFirst("div.item-footer > div.title")?.text() ?: return null 
+        val title = this.attr("data-title").ifBlank {
+            this.selectFirst("div.item-footer > div.title")?.text() ?: return null
         }
-        val href = fixUrlNull(link.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(link.selectFirst("div.thumbnail-outer > img.thumbnail")?.attr("src"))
-        val year = link.selectFirst("div.item-footer > div.info > span:first-child")?.text()?.toIntOrNull()
+        val href = fixUrlNull(this.attr("href")) ?: return null
+        val posterUrl = fixUrlNull(this.selectFirst("div.thumbnail-outer > img.thumbnail")?.attr("src"))
+        val year = this.selectFirst("div.item-footer > div.info > span:first-child")?.text()?.toIntOrNull()
         return newMovieSearchResponse(title, href, TvType.Movie) {
             this.posterUrl = posterUrl
             this.year = year
