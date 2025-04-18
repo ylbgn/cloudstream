@@ -44,30 +44,38 @@ class FilmMakinesi : MainAPI() {
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val document = app.get("${request.data}${page}").document
         
-        val home = document.select("div.film-list div.content a.item").mapNotNull { 
+        // Düzeltilmiş seçici
+        val home = document.select("div.col-6 div.item-relative a.item").mapNotNull { 
             it.toSearchResult() 
         }
+        
+        Log.d("FilmMakinesi", "URL: ${request.data}${page}, Found films: ${home.size}")
 
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val title = this.attr("data-title")
-        if (title.isBlank()) return null
-        
-        val href = fixUrlNull(this.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("div.thumbnail-outer > img")?.attr("src"))
-        val year = this.selectFirst("div.item-footer div.info > span:first-child")?.text()?.toIntOrNull()
-        
-        return newMovieSearchResponse(title, href, TvType.Movie) {
-            this.posterUrl = posterUrl
-            this.year = year
+        try {
+            val title = this.attr("data-title")
+            if (title.isBlank()) return null
+            
+            val href = fixUrlNull(this.attr("href")) ?: return null
+            val posterUrl = fixUrlNull(this.selectFirst("div.thumbnail-outer img.thumbnail")?.attr("src"))
+            val year = this.selectFirst("div.item-footer div.info span:first-child")?.text()?.toIntOrNull()
+            
+            return newMovieSearchResponse(title, href, TvType.Movie) {
+                this.posterUrl = posterUrl
+                this.year = year
+            }
+        } catch (e: Exception) {
+            Log.e("FilmMakinesi", "Error parsing search result: ${e.message}")
+            return null
         }
     }
 
     override suspend fun search(query: String): List<SearchResponse> {
         val document = app.get("${mainUrl}/?s=${query}").document
-        return document.select("div.film-list div.content a.item").mapNotNull { it.toSearchResult() }
+        return document.select("div.col-6 div.item-relative a.item").mapNotNull { it.toSearchResult() }
     }
 
     private fun Element.toRecommendResult(): SearchResponse? {
@@ -83,55 +91,73 @@ class FilmMakinesi : MainAPI() {
     override suspend fun load(url: String): LoadResponse? {
         val document = app.get(url).document
 
-        val title = document.selectFirst("div.film-bilgileri h1")?.text()?.trim() ?: return null
-        val poster = fixUrlNull(document.selectFirst("meta[property='og:image']")?.attr("content"))
-        val description = document.selectFirst("div.film-bilgileri div.ozet")?.text()?.trim()
-        
-        val tags = document.select("div.film-bilgileri div.tur a").map { it.text().trim() }
-        val rating = document.selectFirst("div.film-bilgileri div.imdb-puani")?.text()?.replace("IMDB:", "")?.trim()?.toRatingInt()
-        val year = document.selectFirst("div.film-bilgileri div.yapim-yili")?.text()?.replace("Yapım Yılı:", "")?.trim()?.toIntOrNull()
+        try {
+            val title = document.selectFirst("div.film-bilgileri h1")?.text()?.trim() ?: return null
+            val poster = fixUrlNull(document.selectFirst("meta[property='og:image']")?.attr("content"))
+            val description = document.selectFirst("div.film-bilgileri div.ozet")?.text()?.trim()
+            
+            val tags = document.select("div.film-bilgileri div.tur a").map { it.text().trim() }
+            val ratingText = document.selectFirst("div.film-bilgileri div.imdb-puani")?.text() ?: ""
+            val rating = ratingText.replace("IMDB:", "").trim().toRatingInt()
+            
+            val yearText = document.selectFirst("div.film-bilgileri div.yapim-yili")?.text() ?: ""
+            val year = yearText.replace("Yapım Yılı:", "").trim().toIntOrNull()
 
-        val durationText = document.selectFirst("div.film-bilgileri div.sure")?.text()?.replace("Süre:", "")?.trim()
-        val duration = durationText?.split(" ")?.firstOrNull()?.toIntOrNull() ?: 0
+            val durationText = document.selectFirst("div.film-bilgileri div.sure")?.text() ?: ""
+            val durationStr = durationText.replace("Süre:", "").trim()
+            val duration = durationStr.split(" ").firstOrNull()?.toIntOrNull() ?: 0
 
-        val recommendations = document.select("div.benzer-filmler div.film-kutusu").mapNotNull { 
-            it.toRecommendResult() 
-        }
-        
-        val actors = document.select("div.film-bilgileri div.oyuncular a").map {
-            Actor(it.text().trim())
-        }
+            val recommendations = document.select("div.benzer-filmler div.film-kutusu").mapNotNull { 
+                it.toRecommendResult() 
+            }
+            
+            val actors = document.select("div.film-bilgileri div.oyuncular a").map {
+                Actor(it.text().trim())
+            }
 
-        val trailer = fixUrlNull(document.selectFirst("div.fragman iframe")?.attr("src"))
+            val trailer = fixUrlNull(document.selectFirst("div.fragman iframe")?.attr("src"))
 
-        return newMovieLoadResponse(title, url, TvType.Movie, url) {
-            this.posterUrl = poster
-            this.year = year
-            this.plot = description
-            this.tags = tags
-            this.rating = rating
-            this.duration = duration
-            this.recommendations = recommendations
-            addActors(actors)
-            addTrailer(trailer)
+            return newMovieLoadResponse(title, url, TvType.Movie, url) {
+                this.posterUrl = poster
+                this.year = year
+                this.plot = description
+                this.tags = tags
+                this.rating = rating
+                this.duration = duration
+                this.recommendations = recommendations
+                addActors(actors)
+                addTrailer(trailer)
+            }
+        } catch (e: Exception) {
+            Log.e("FilmMakinesi", "Error loading movie: ${e.message}")
+            return null
         }
     }
 
     override suspend fun loadLinks(data: String, isCasting: Boolean, subtitleCallback: (SubtitleFile) -> Unit, callback: (ExtractorLink) -> Unit): Boolean {
-        val document = app.get(data).document
-        val iframe = document.selectFirst("div.player-area iframe")?.attr("src") ?: ""
-        
-        loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
-        
-        // Alternatif kaynakları da kontrol et
-        document.select("div.player-tabs a").forEach { tab ->
-            val tabUrl = fixUrlNull(tab.attr("href")) ?: return@forEach
-            val tabDoc = app.get(tabUrl).document
-            val tabIframe = tabDoc.selectFirst("div.player-area iframe")?.attr("src") ?: return@forEach
+        try {
+            val document = app.get(data).document
+            val iframe = document.selectFirst("div.player-area iframe")?.attr("src") ?: ""
             
-            loadExtractor(tabIframe, "${mainUrl}/", subtitleCallback, callback)
+            if (iframe.isNotBlank()) {
+                loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
+            }
+            
+            // Alternatif kaynakları da kontrol et
+            document.select("div.player-tabs a").forEach { tab ->
+                val tabUrl = fixUrlNull(tab.attr("href")) ?: return@forEach
+                val tabDoc = app.get(tabUrl).document
+                val tabIframe = tabDoc.selectFirst("div.player-area iframe")?.attr("src") ?: return@forEach
+                
+                if (tabIframe.isNotBlank()) {
+                    loadExtractor(tabIframe, "${mainUrl}/", subtitleCallback, callback)
+                }
+            }
+            
+            return true
+        } catch (e: Exception) {
+            Log.e("FilmMakinesi", "Error loading links: ${e.message}")
+            return false
         }
-
-        return true
     }
 }
