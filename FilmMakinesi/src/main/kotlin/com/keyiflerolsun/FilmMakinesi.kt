@@ -25,39 +25,40 @@ class FilmMakinesi : MainAPI() {
     override var sequentialMainPageScrollDelay = 50L  // ? 0.05 saniye
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/filmler/"                                to "Son Filmler",
-        "${mainUrl}/film-izle/olmeden-izlenmesi-gerekenler/" to "Ölmeden İzle",
-        "${mainUrl}/tur/aksiyon/film/"                       to "Aksiyon",
-        "${mainUrl}/tur/bilim-kurgu/film/"                    to "Bilim Kurgu",
-        "${mainUrl}/tur/macera/film/"                        to "Macera",
-        "${mainUrl}/tur/komedi/film/s"                        to "Komedi",
-        "${mainUrl}/tur/romantik/film/"                      to "Romantik",
-        "${mainUrl}/tur/belgesel/film/"                      to "Belgesel",
-        "${mainUrl}/tur/fantastik/film/"                     to "Fantastik",
-        "${mainUrl}/tur/polisiye/film/"                      to "Polisiye Suç",
-        "${mainUrl}/tur/korku/film/"                         to "Korku",
-        "${mainUrl}/tur/animasyon/film/"                     to "Animasyon",
-        "${mainUrl}/tur/gizem/film/"                         to "Gizem",
-        "${mainUrl}/kanal/netflix/"                          to "Netflix",
+        "${mainUrl}/filmler/sayfa"                                to "Son Filmler",
+        "${mainUrl}/film-izle/olmeden-izlenmesi-gerekenler/sayfa" to "Ölmeden İzle",
+        "${mainUrl}/tur/aksiyon/film/sayfa"                       to "Aksiyon",
+        "${mainUrl}/tur/bilim-kurgu/film/sayfa"                    to "Bilim Kurgu",
+        "${mainUrl}/tur/macera/film/sayfa"                        to "Macera",
+        "${mainUrl}/tur/komedi/film/sayfa"                        to "Komedi",
+        "${mainUrl}/tur/romantik/film/sayfa"                      to "Romantik",
+        "${mainUrl}/tur/belgesel/film/sayfa"                      to "Belgesel",
+        "${mainUrl}/tur/fantastik/film/sayfa"                     to "Fantastik",
+        "${mainUrl}/tur/polisiye/film/sayfa"                      to "Polisiye Suç",
+        "${mainUrl}/tur/korku/film/sayfa"                         to "Korku",
+        "${mainUrl}/tur/animasyon/film/sayfa"                     to "Animasyon",
+        "${mainUrl}/tur/gizem/film/sayfa"                         to "Gizem",
+        "${mainUrl}/kanal/netflix/sayfa"                          to "Netflix",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         val document = app.get("${request.data}${page}").document
-        val home     = if (request.data.contains("/film-izle/")) {
-            document.select("div.item-relative").mapNotNull { it.toSearchResult() }
-        } else {
-            document.select("div.item-relative").mapNotNull { it.toSearchResult() }
+        
+        // Düzeltilmiş seçici - a.item elementlerini doğrudan seçiyoruz
+        val home = document.select("div.film-list a.item[data-title]").mapNotNull { 
+            it.toSearchResult() 
         }
 
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
+        // a.item elementi için düzeltilmiş veri çıkarma
         val title = this.attr("data-title")
         if (title.isBlank()) return null
         
         val href = fixUrlNull(this.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("img.thumbnail")?.attr("src"))
+        val posterUrl = fixUrlNull(this.selectFirst("div.thumbnail-outer > img.thumbnail")?.attr("src"))
         val year = this.selectFirst("div.info > span:first-child")?.text()?.toIntOrNull()
         
         return newMovieSearchResponse(title, href, TvType.Movie) {
