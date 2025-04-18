@@ -42,11 +42,12 @@ class FilmMakinesi : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val url = "${request.data}${page}"
-        val document = app.get(url).document
-
-        // Daha basit bir seçici kullanarak tüm film kartlarını bul
-        val home = document.select("a.item[data-title]").mapNotNull { it.toSearchResult() }
+        val document = app.get("${request.data}${page}").document
+        val home     = if (request.data.contains("/film-izle/")) {
+            document.select("div.item-relative").mapNotNull { it.toSearchResult() }
+        } else {
+            document.select("div.item-relative").mapNotNull { it.toSearchResult() }
+        }
 
         return newHomePageResponse(request.name, home)
     }
