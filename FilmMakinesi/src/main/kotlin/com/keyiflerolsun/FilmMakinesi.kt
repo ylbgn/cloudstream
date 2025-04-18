@@ -39,33 +39,32 @@ class FilmMakinesi : MainAPI() {
         "${mainUrl}/tur/animasyon/film/sayfa/"                     to "Animasyon",
         "${mainUrl}/tur/gizem/film/sayfa/"                         to "Gizem",
         "${mainUrl}/kanal/netflix/sayfa/"                          to "Netflix",
-        // "${mainUrl}/film-izle/savas/page/"                        to "Tarihi ve Savaş",
-        // "${mainUrl}/film-izle/gerilim-filmleri-izle/page/"        to "Gerilim Heyecan",
-        // "${mainUrl}/film-izle/gizemli/page/"                      to "Gizem",
-        // "${mainUrl}/film-izle/aile-filmleri/page/"                to "Aile",
-        // "${mainUrl}/film-izle/animasyon-filmler/page/"            to "Animasyon",
-        // "${mainUrl}/film-izle/western/page/"                      to "Western",
-        // "${mainUrl}/film-izle/biyografi/page/"                    to "Biyografik",
-        // "${mainUrl}/film-izle/dram/page/"                         to "Dram",
-        // "${mainUrl}/film-izle/muzik/page/"                        to "Müzik",
-        // "${mainUrl}/film-izle/spor/page/"                         to "Spor"
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get("${request.data}${page}").document
-        val home = document.select("div.item-relative > a.item").mapNotNull { it.toSearchResult() }
+        val url = "${request.data}${page}"
+        Log.d("FilmMakinesi", "Loading URL: $url")
+        
+        val document = app.get(url).document
+        val home = document.select("div.col-6 col-sm-4 col-md-3 col-lg-2 div.item-relative").mapNotNull { 
+            Log.d("FilmMakinesi", "Found item: ${it.selectFirst("a")?.attr("href")}")
+            it.toSearchResult() 
+        }
+        
+        Log.d("FilmMakinesi", "Total movies found: ${home.size}")
         return newHomePageResponse(request.name, home)
     }
 
     private fun Element.toSearchResult(): SearchResponse? {
-        val title = this.selectFirst("div.item-footer > div.title")?.text() ?: return null
-        val href = fixUrlNull(this.attr("href")) ?: return null
-        val posterUrl = fixUrlNull(this.selectFirst("div.thumbnail-outer > img.thumbnail")?.attr("src"))
-        val year = this.selectFirst("div.item-footer > div.info > span:first-child")?.text()?.toIntOrNull()
+        val link = this.selectFirst("a.item") ?: return null
+        val title = link.attr("data-title").takeIf { !it.isNullOrBlank() } ?: return null
+        val href = fixUrlNull(link.attr("href")) ?: return null
+        val posterUrl = fixUrlNull(this.selectFirst("img.thumbnail")?.attr("src"))
 
+        Log.d("FilmMakinesi", "Processing: $title - $href")
+        
         return newMovieSearchResponse(title, href, TvType.Movie) { 
             this.posterUrl = posterUrl
-            this.year = year
         }
     }
 
