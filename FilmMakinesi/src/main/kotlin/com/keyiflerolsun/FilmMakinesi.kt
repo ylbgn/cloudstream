@@ -25,20 +25,20 @@ class FilmMakinesi : MainAPI() {
     override var sequentialMainPageScrollDelay = 50L  // ? 0.05 saniye
 
     override val mainPage = mainPageOf(
-        "${mainUrl}/filmler/sayfa/"                                to "Son Filmler",
-        "${mainUrl}/film-izle/olmeden-izlenmesi-gerekenler/sayfa/" to "Ölmeden İzle",
-        "${mainUrl}/tur/aksiyon/film/sayfa/"                       to "Aksiyon",
-        "${mainUrl}/tur/bilim-kurgu/film/sayfa"                    to "Bilim Kurgu",
-        "${mainUrl}/tur/macera/film/sayfa/"                        to "Macera",
-        "${mainUrl}/tur/komedi/film/sayfa/"                        to "Komedi",
-        "${mainUrl}/tur/romantik/film/sayfa/"                      to "Romantik",
-        "${mainUrl}/tur/belgesel/film/sayfa/"                      to "Belgesel",
-        "${mainUrl}/tur/fantastik/film/sayfa/"                     to "Fantastik",
-        "${mainUrl}/tur/polisiye/film/sayfa/"                      to "Polisiye Suç",
-        "${mainUrl}/tur/korku/film/sayfa/"                         to "Korku",
-        "${mainUrl}/tur/animasyon/film/sayfa/"                     to "Animasyon",
-        "${mainUrl}/tur/gizem/film/sayfa/"                         to "Gizem",
-        "${mainUrl}/kanal/netflix/sayfa/"                          to "Netflix",
+        "${mainUrl}/filmler/"                                to "Son Filmler",
+        "${mainUrl}/film-izle/olmeden-izlenmesi-gerekenler/" to "Ölmeden İzle",
+        "${mainUrl}/tur/aksiyon/film/"                       to "Aksiyon",
+        "${mainUrl}/tur/bilim-kurgu/film/"                    to "Bilim Kurgu",
+        "${mainUrl}/tur/macera/film/"                        to "Macera",
+        "${mainUrl}/tur/komedi/film/s"                        to "Komedi",
+        "${mainUrl}/tur/romantik/film/"                      to "Romantik",
+        "${mainUrl}/tur/belgesel/film/"                      to "Belgesel",
+        "${mainUrl}/tur/fantastik/film/"                     to "Fantastik",
+        "${mainUrl}/tur/polisiye/film/"                      to "Polisiye Suç",
+        "${mainUrl}/tur/korku/film/"                         to "Korku",
+        "${mainUrl}/tur/animasyon/film/"                     to "Animasyon",
+        "${mainUrl}/tur/gizem/film/"                         to "Gizem",
+        "${mainUrl}/kanal/netflix/"                          to "Netflix",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
