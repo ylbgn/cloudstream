@@ -10,7 +10,7 @@ import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import java.io.InputStream
 
 class DragonTV : MainAPI() {
-    override var mainUrl              = "https://raw.githubusercontent.com/DRAG-10/DRAG10/refs/heads/special/DRAG10.m3u"
+    override var mainUrl              = "https://raw.githubusercontent.com/patr0nq/link/refs/heads/main/dragon.m3u"
     override var name                 = "DragonTV"
     override val hasMainPage          = true
     override var lang                 = "tr"
