@@ -38,7 +38,7 @@ class FilmMakinesi : MainAPI() {
         "${mainUrl}/tur/korku/film/sayfa/"                         to "Korku",
         "${mainUrl}/tur/animasyon/film/sayfa/"                     to "Animasyon",
         "${mainUrl}/tur/gizem/film/sayfa/"                         to "Gizem",
-        "${mainUrl}/kanal/netflix/sayfa/"                          to "Netflix",
+        //"${mainUrl}/kanal/netflix/sayfa/"                          to "Netflix",
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
