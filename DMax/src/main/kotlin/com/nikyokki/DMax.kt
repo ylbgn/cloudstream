@@ -37,12 +37,10 @@ class DMax : MainAPI() {
         "${mainUrl}/kesfet/turbo"      to "Turbo",
         "${mainUrl}/kesfet/dogayla-ic-ice"      to "Doğayla İç içe",
         "${mainUrl}/kesfet/zorlu-isler"      to "Zorlu İşler",
-        "${mainUrl}/kesfet/spor"      to "Yaşam",
-        "${mainUrl}/kesfet/belgesel"      to "Evlilik",
+        "${mainUrl}/kesfet/spor"      to "Spoe
+        "${mainUrl}/kesfet/belgesel"      to "Belgesel",
         "${mainUrl}/kesfet/nasil-yapiliyor"      to "Nasıl Yapılıyor?",
-        "${mainUrl}/kesfet/popcorn-kusagi"      to "Popcorn Kuşağı",
-        "${mainUrl}/kesfet/korelendik"      to "Korelendik",
-    )
+        "${mainUrl}/kesfet/popcorn-kusagi"      to "Popcorn Kuşağı",    )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
         if (page > 1) {
