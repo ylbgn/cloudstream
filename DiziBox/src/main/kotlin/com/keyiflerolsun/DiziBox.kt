@@ -47,8 +47,9 @@ class DiziBox : MainAPI() {
     }
 
     override val mainPage = mainPageOf(
+		"${mainUrl}/tum-bolumler/page/SAYFA/"   						to "Yeni Bölümler",
         "${mainUrl}/dizi-arsivi/page/SAYFA/?ulke[]=turkiye&yil=&imdb"   to "Yerli",
-        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]%5B%5D=aile&yil&imdb"       to "Aile",
+        "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=aile&yil&imdb"       to "Aile",
         "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=aksiyon&yil&imdb"    to "Aksiyon",
         "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=animasyon&yil&imdb"  to "Animasyon",
         "${mainUrl}/dizi-arsivi/page/SAYFA/?tur[0]=belgesel&yil&imdb"   to "Belgesel",
