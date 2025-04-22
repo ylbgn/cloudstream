@@ -7,7 +7,7 @@ import org.jsoup.nodes.Element
 
 class DMax : MainAPI() {
     override var mainUrl              = "https://www.dmax.com.tr"
-    override var name                 = "TLC"
+    override var name                 = "DMax"
     override val hasMainPage          = true
     override var lang                 = "tr"
     override val hasQuickSearch       = false

@@ -32,6 +32,7 @@ class TLC : MainAPI() {
     )
 
     override val mainPage = mainPageOf(
+        "${mainUrl}/kesfet"      to "Öne Çıkanlar",
         "${mainUrl}/kesfet/a-z"      to "A-Z",
         "${mainUrl}/kesfet/sira-disi-hayatlar"      to "Sıra Dışı Hayatlar",
         "${mainUrl}/kesfet/ev-dekorasyon"      to "Ev & Dekorasyon",
