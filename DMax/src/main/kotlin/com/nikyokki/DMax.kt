@@ -5,8 +5,8 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import org.jsoup.nodes.Element
 
-class TLC : MainAPI() {
-    override var mainUrl              = "https://www.tlctv.com.tr"
+class DMax : MainAPI() {
+    override var mainUrl              = "https://www.dmax.com.tr"
     override var name                 = "TLC"
     override val hasMainPage          = true
     override var lang                 = "tr"
@@ -32,14 +32,15 @@ class TLC : MainAPI() {
     )
 
     override val mainPage = mainPageOf(
+        "${mainUrl}/kesfet"      to "Öne Çıkanlar",
         "${mainUrl}/kesfet/a-z"      to "A-Z",
-        "${mainUrl}/kesfet/sira-disi-hayatlar"      to "Sıra Dışı Hayatlar",
-        "${mainUrl}/kesfet/ev-dekorasyon"      to "Ev & Dekorasyon",
-        "${mainUrl}/kesfet/suc-arastirma"      to "Suç & Araştırma",
-        "${mainUrl}/kesfet/yasam"      to "Yaşam",
-        "${mainUrl}/kesfet/evlilik"      to "Evlilik",
-        "${mainUrl}/kesfet/yemek"      to "Yemek",
-        "${mainUrl}/kesfet/belgesel"      to "Belgesel",
+        "${mainUrl}/kesfet/turbo"      to "Turbo",
+        "${mainUrl}/kesfet/dogayla-ic-ice"      to "Doğayla İç içe",
+        "${mainUrl}/kesfet/zorlu-isler"      to "Zorlu İşler",
+        "${mainUrl}/kesfet/spor"      to "Yaşam",
+        "${mainUrl}/kesfet/belgesel"      to "Evlilik",
+        "${mainUrl}/kesfet/nasil-yapiliyor"      to "Nasıl Yapılıyor?",
+        "${mainUrl}/kesfet/popcorn-kusagi"      to "Popcorn Kuşağı",
         "${mainUrl}/kesfet/korelendik"      to "Korelendik",
     )
 
@@ -122,7 +123,7 @@ class TLC : MainAPI() {
         val document = app.get(data).document
         val videoCode = document.selectFirst("div.videp-player-container div")?.attr("data-video-code")
         Log.d("TLC", "videoCode » $videoCode")
-        val vidUrl = "https://dygvideo.dygdigital.com/api/redirect?PublisherId=20&ReferenceId=$videoCode&SecretKey=NtvApiSecret2014*"
+        val vidUrl = "https://dygvideo.dygdigital.com/api/redirect?PublisherId=27&ReferenceId=$videoCode&SecretKey=NtvApiSecret2014*"
         callback.invoke(
             newExtractorLink(
                 source = this.name,
