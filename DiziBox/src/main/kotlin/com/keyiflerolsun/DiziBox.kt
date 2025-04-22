@@ -108,7 +108,6 @@ class DiziBox : MainAPI() {
         val szn = this.selectFirst("span.season")?.text()?.replace(".SEZON", "") ?: ""
         val ep = this.selectFirst("b.episode")?.text()?.replace(".BÖLÜM", "") ?: ""
         val epName = "${szn}x$ep"
-
         val title = "$name - $epName"
 
         val epDoc = fixUrlNull(this.selectFirst("a")?.attr("href"))?.let { app.get(it).document }
