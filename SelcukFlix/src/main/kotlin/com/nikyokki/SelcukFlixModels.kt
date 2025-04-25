@@ -28,6 +28,7 @@ data class Root(
 )
 
 data class ContentItem(
+    @JsonProperty("id") val id: Int?,
     @JsonProperty("original_title") val originalTitle: String?,
     @JsonProperty("culture_title") val cultureTitle: String?,
     @JsonProperty("release_year") val releaseYear: Int?,
@@ -44,6 +45,8 @@ data class RelatedResults(
     @JsonProperty("getMovieCastsById") val getMovieCastsById: MovieCast?,
     @JsonProperty("getMoviePartsById") val getMoviePartsById: MovieParts?,
     @JsonProperty("getMoviePartSourcesById_") val getMoviePartSourcesById: MoviePartsSource?,
+    @JsonProperty("getSerieSeasonAndEpisodes") val getSerieSeasonAndEpisodes: Seasons?,
+    @JsonProperty("getEpisodeSources") val getEpisodeSources: EpisodeSources?,
 )
 
 data class ContentTrailers(
@@ -89,3 +92,34 @@ data class SourceItem(
     val sourceContent: String,
     val quality: String
 )
+
+data class ListItems(
+    @JsonProperty("result") val result: List<ContentItem>
+)
+
+data class Episode(
+    @JsonProperty("season_no") val seasonNo: Int?,
+    @JsonProperty("episode_no") val episodeNo: Int?,
+    @JsonProperty("episode_text") val epText: String?,
+    @JsonProperty("used_slug") val usedSlug: String?,
+)
+
+data class Season(
+    @JsonProperty("season_no") val seasonNo: Int?,
+    @JsonProperty("season_text") val seText: String?,
+    @JsonProperty("used_slug") val usedSlug: String?,
+    @JsonProperty("episodes") val episodes: List<Episode>?,
+)
+
+data class Seasons(
+    @JsonProperty("result") val seasons: List<Season>?
+)
+
+data class EpisodeSources(
+    @JsonProperty("state") val state: Boolean?,
+    @JsonProperty("result") val result: List<MoviePartsSourceResult>?
+)
+
+
+
+
