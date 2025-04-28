@@ -210,9 +210,12 @@ class FilmMakinesi : MainAPI() {
         val document = app.get(data).document
         val iframe = document.selectFirst("iframe")?.attr("data-src") ?: ""
         Log.d("FLMM", iframe)
-
         loadExtractor(iframe, "${mainUrl}/", subtitleCallback, callback)
-
+        document.select("div.video-parts a").forEach {
+            val iframeUrl = it.attr("data-video_url")
+            val urlName = it.text()
+            loadExtractor(iframeUrl, "${mainUrl}/", subtitleCallback, callback)
+        }
         return true
     }
 }
