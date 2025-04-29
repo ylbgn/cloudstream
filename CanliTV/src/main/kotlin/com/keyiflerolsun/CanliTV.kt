@@ -21,7 +21,6 @@ import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newLiveSearchResponse
 import com.lagradost.cloudstream3.newLiveStreamLoadResponse
-import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import com.lagradost.cloudstream3.utils.ExtractorLink
 import com.lagradost.cloudstream3.utils.ExtractorLinkType
 import com.lagradost.cloudstream3.utils.Qualities
@@ -58,8 +57,8 @@ class CanliTV : MainAPI() {
         val decompressedBody = decompressGzip(response.body)
         val objectMapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-
         val result: CanliTvResult = objectMapper.readValue(decompressedBody)
+        val liste = mutableListOf<HomePageList>()
         kanallar.addAll(result.dataResult.allChannels!!)
         val map = kanallar.groupBy { it.categories!![0].name }["Ulusal"]?.map { kanal ->
             val streamurl = kanal.streamData!!.hlsStreamUrl.toString()
@@ -78,7 +77,7 @@ class CanliTV : MainAPI() {
             }
         }
         val newHomePageResponse = newHomePageResponse(
-            kanallar.groupBy { it.categories!![0].name }.map { group ->
+            kanallar.groupBy{ it.categories!![0].name }.filter{ it.key != "Bilgilendirme" }.map { group ->
                 val title = group.key ?: ""
                 val show = group.value.map { kanal ->
                     val streamurl = kanal.streamData!!.hlsStreamUrl.toString()
@@ -144,7 +143,11 @@ class CanliTV : MainAPI() {
                     "tr"
                 )
                 Log.d("CTV", "loadData -> $loadData")
-                return newLiveStreamLoadResponse(it.name!!, it.streamData.hlsStreamUrl.toString(), url) {
+                return newLiveStreamLoadResponse(
+                    it.name!!,
+                    it.streamData.hlsStreamUrl.toString(),
+                    url
+                ) {
                     this.posterUrl = loadData.poster
                     this.plot = "tr"
                     this.tags = listOf(loadData.group, loadData.nation)
@@ -161,7 +164,11 @@ class CanliTV : MainAPI() {
                 "tr"
             )
             Log.d("CTV", "loadData -> $loadData")
-            return newLiveStreamLoadResponse(it.name!!, it.streamData.hlsStreamUrl.toString(), url) {
+            return newLiveStreamLoadResponse(
+                it.name!!,
+                it.streamData.hlsStreamUrl.toString(),
+                url
+            ) {
                 this.posterUrl = loadData.poster
                 this.plot = "tr"
                 this.tags = listOf(loadData.group, loadData.nation)
@@ -187,10 +194,19 @@ class CanliTV : MainAPI() {
             if (data == it.streamData!!.hlsStreamUrl.toString()) {
                 callback.invoke(
                     newExtractorLink(
-                        source = it.name.toString(),
-                        name = it.name.toString(),
+                        source = it.name.toString() + " - HLS",
+                        name = it.name.toString() + " - HLS",
                         url = it.streamData.hlsStreamUrl.toString(),
                         ExtractorLinkType.M3U8
+                    ) {
+                        this.quality = Qualities.Unknown.value
+                    })
+                callback.invoke(
+                    newExtractorLink(
+                        source = it.name.toString() + " - DASH",
+                        name = it.name.toString() + " - DASH",
+                        url = it.streamData.dashStreamUrl.toString(),
+                        ExtractorLinkType.DASH
                     ) {
                         this.quality = Qualities.Unknown.value
                     })
