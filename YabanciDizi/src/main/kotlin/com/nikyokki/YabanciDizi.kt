@@ -16,6 +16,7 @@ import com.lagradost.cloudstream3.TvType
 import com.lagradost.cloudstream3.app
 import com.lagradost.cloudstream3.fixUrlNull
 import com.lagradost.cloudstream3.mainPageOf
+import com.lagradost.cloudstream3.newEpisode
 import com.lagradost.cloudstream3.newHomePageResponse
 import com.lagradost.cloudstream3.newMovieLoadResponse
 import com.lagradost.cloudstream3.newMovieSearchResponse
@@ -136,7 +137,7 @@ class YabanciDizi : MainAPI() {
                 ?.toIntOrNull()
         val description = document.selectFirst("div.series-summary-wrapper p")?.text()?.trim()
         val tags = mutableListOf<String>()
-        document.select("div.ui.list a").forEach {
+        document.selectFirst("div.ui.list")?.select("a")?.forEach {
             if (!it.attr("href").contains("/oyuncu/")) {
                 tags.add(it.text().trim())
             }
@@ -159,12 +160,11 @@ class YabanciDizi : MainAPI() {
                         fixUrlNull(episodeElement.selectFirst("h6 a")?.attr("href")) ?: return@ep
                     epEpisode++
                     episodes.add(
-                        Episode(
-                            data = epHref,
-                            name = "${epSeason}. Sezon ${epEpisode}. Bölüm",
-                            season = epSeason,
-                            episode = epEpisode
-                        )
+                        newEpisode(epHref){
+                            this.name = "${epSeason}. Sezon ${epEpisode}. Bölüm"
+                            this.season = epSeason
+                            this.episode = epEpisode
+                        }
                     )
                 }
             }
@@ -207,83 +207,117 @@ class YabanciDizi : MainAPI() {
             Log.d("YBD", name)
             val dataLink = it.attr("data-link")
             Log.d("YBD", dataLink)
+            val dataHash = it.attr("data-hash")
+            Log.d("YBD", dataHash)
             if (name.contains("Mac")) {
-                val mac = app.post(
+                val mac = app.get(
                     "https://yabancidizi.tv/api/drive/" +
                             dataLink.replace("/", "_").replace("+", "-"),
-                    referer = "$mainUrl/"
+                    referer = "$mainUrl/",
+                    headers =
+                    mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
                 ).document
-                val subFrame = mac.selectFirst("iframe")?.attr("src") ?: return false
-                val iDoc = app.get(
-                    subFrame, referer = "${mainUrl}/",
-                    headers = mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
-                ).text
-                val cryptData =
-                    Regex("""CryptoJS\.AES\.decrypt\("(.*)","""").find(iDoc)?.groupValues?.get(1)
-                        ?: ""
-                val cryptPass =
-                    Regex("""","(.*)"\);""").find(iDoc)?.groupValues?.get(1) ?: ""
-                val decryptedData = CryptoJS.decrypt(cryptPass, cryptData)
-                val decryptedDoc = Jsoup.parse(decryptedData)
-                val vidUrl =
-                    Regex("""file: '(.*)',""").find(decryptedDoc.html())?.groupValues?.get(1)
-                        ?: ""
-                Log.d("YBD", vidUrl)
-                callback.invoke(
-                    newExtractorLink(
-                        source = name,
-                        name = name,
-                        url = vidUrl,
-                        ExtractorLinkType.M3U8
-                    ) {
-                        this.referer = mainUrl
-                        this.headers = mapOf(
-                            "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
-                            "Referer" to mainUrl
-                        )
-                        this.quality = Qualities.Unknown.value
-                    }
-                )
-                val aa = app.get(
-                    vidUrl, referer = "$mainUrl/", headers =
-                    mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
-                ).document.body().text()
-                val urlList = extractStreamInfoWithRegex(aa)
-                for (sonUrl in urlList) {
-                    Log.d("YBD", "sonUrl: ${sonUrl.link} -- ${sonUrl.resolution}")
-                    callback.invoke(
-                        newExtractorLink(
-                            source = "$name -- ${sonUrl.resolution}",
-                            name = "$name -- ${sonUrl.resolution}",
-                            url = sonUrl.link,
-                            ExtractorLinkType.M3U8
-                        ) {
-                            this.referer = vidUrl
-                            this.headers = mapOf(
-                                "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
-                                "Referer" to vidUrl
-                            )
-                            this.quality = getQualityFromName(sonUrl.resolution)
-                        }
-                    )
+                var subFrame = mac.selectFirst("iframe")?.attr("src") ?: ""
+                if (subFrame.isEmpty()) {
+                    Log.d("YBD", "subFrame boş drives denenecek")
+                    val timestampInSeconds = System.currentTimeMillis() / 1000
+                    Log.d("YBD", "timestampInSeconds -> $timestampInSeconds")
+                    val drives = app.get(
+                        "https://yabancidizi.tv/api/drives/" +
+                                dataLink.replace("/", "_").replace("+", "-") + "?t=$timestampInSeconds",
+                        referer = "https://yabancidizi.tv/api/drives/" +
+                                dataLink.replace("/", "_").replace("+", "-"),
+                        headers =
+                        mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
+                    ).document
+                    subFrame = drives.selectFirst("iframe")?.attr("src") ?: ""
+                    Log.d("YBD", "subFrame -> $subFrame")
+                    if (subFrame.isEmpty()) return@forEach
+                    loadMac(subFrame, callback)
+                } else {
+                    Log.d("YBD", "Else")
+                    loadMac(subFrame, callback)
                 }
+
             } else if (name.contains("VidMoly")) {
-                val mac = app.post(
+                val vdm = app.get(
                     "https://yabancidizi.tv/api/moly/" +
-                            dataLink.replace("/", "_").replace("+", "-"), referer = "$mainUrl/"
+                            dataLink.replace("/", "_").replace("+", "-"), referer = "$mainUrl/",
+                    headers =
+                    mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
                 ).document
-                val subFrame = mac.selectFirst("iframe")?.attr("src") ?: return false
+                val subFrame = vdm.selectFirst("iframe")?.attr("src") ?: ""
                 loadExtractor(subFrame, "${mainUrl}/", subtitleCallback, callback)
             } else if (name.contains("Okru")) {
-                val mac = app.post(
+                val okr = app.get(
                     "https://yabancidizi.tv/api/ruplay/" +
-                            dataLink.replace("/", "_").replace("+", "-"), referer = "$mainUrl/"
+                            dataLink.replace("/", "_").replace("+", "-"), referer = "$mainUrl/",
+                    headers =
+                    mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
                 ).document
-                val subFrame = mac.selectFirst("iframe")?.attr("src") ?: return false
+                val subFrame = okr.selectFirst("iframe")?.attr("src") ?: ""
                 loadExtractor(subFrame, "${mainUrl}/", subtitleCallback, callback)
             }
         }
         return true
+    }
+
+    private suspend fun loadMac(subFrame: String, callback: (ExtractorLink) -> Unit) {
+        Log.d("YBD", "subFrame -> $subFrame")
+        val iDoc = app.get(
+            subFrame, referer = "${mainUrl}/",
+            headers = mapOf("user-agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
+        ).text
+        val cryptData =
+            Regex("""CryptoJS\.AES\.decrypt\("(.*)","""").find(iDoc)?.groupValues?.get(1)
+                ?: ""
+        val cryptPass =
+            Regex("""","(.*)"\);""").find(iDoc)?.groupValues?.get(1) ?: ""
+        val decryptedData = CryptoJS.decrypt(cryptPass, cryptData)
+        val decryptedDoc = Jsoup.parse(decryptedData)
+        val vidUrl =
+            Regex("""file: '(.*)',""").find(decryptedDoc.html())?.groupValues?.get(1)
+                ?: ""
+        Log.d("YBD", vidUrl)
+        callback.invoke(
+            newExtractorLink(
+                source = name,
+                name = name,
+                url = vidUrl,
+                ExtractorLinkType.M3U8
+            ) {
+                this.referer = mainUrl
+                this.headers = mapOf(
+                    "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                    "Referer" to mainUrl
+                )
+                this.quality = Qualities.Unknown.value
+            }
+        )
+        val aa = app.get(
+            vidUrl, referer = "$mainUrl/", headers =
+            mapOf("User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0")
+        ).document.body().text()
+        val urlList = extractStreamInfoWithRegex(aa)
+        for (sonUrl in urlList) {
+            Log.d("YBD", "sonUrl: ${sonUrl.link} -- ${sonUrl.resolution}")
+            callback.invoke(
+                newExtractorLink(
+                    source = "$name -- ${sonUrl.resolution}",
+                    name = "$name -- ${sonUrl.resolution}",
+                    url = sonUrl.link,
+                    ExtractorLinkType.M3U8
+                ) {
+                    this.referer = vidUrl
+                    this.headers = mapOf(
+                        "User-Agent" to "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:135.0) Gecko/20100101 Firefox/135.0",
+                        "Referer" to vidUrl
+                    )
+                    this.quality = getQualityFromName(sonUrl.resolution)
+                }
+            )
+        }
+
     }
 
     private fun extractStreamInfoWithRegex(m3uString: String): List<StreamInfo> {
