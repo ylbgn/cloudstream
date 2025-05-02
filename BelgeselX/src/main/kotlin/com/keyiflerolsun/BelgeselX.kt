@@ -134,7 +134,7 @@ class BelgeselX : MainAPI() {
         val script = source.document.select("script").find { it.data().contains("var hedefA = document.getElementById") }?.data() ?: ""
         val belgeselId = script.substringAfter("getElementById('").substringBefore("');")
 
-        for (i in 2 .. 4) {
+        for (i in 2 .. 5) {
             val url = "https://belgeselx.com/video/data/new$i.php?id=$belgeselId"
             val resp = app.get(url, referer = data)
             if (url.contains("new4.php")) {
