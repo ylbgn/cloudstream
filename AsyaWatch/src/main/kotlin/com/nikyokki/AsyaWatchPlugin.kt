@@ -7,6 +7,6 @@ import android.content.Context
 @CloudstreamPlugin
 class AsyaWatchPlugin: Plugin() {
     override fun load(context: Context) {
-        registerMainAPI(SelcukFlix())
+        registerMainAPI(AsyaWatch())
     }
 }
