@@ -34,6 +34,8 @@ class `4KFilmIzlesene` : MainAPI() {
     override val supportedTypes = setOf(TvType.Movie)
 
     override val mainPage = mainPageOf(
+        "${mainUrl}/"                               to "Yeni Filmler",
+        "${mainUrl}/"                               to "Trend Filmler",
         "${mainUrl}/tur/aile-filmleri/"             to "Aile",
         "${mainUrl}/tur/aksiyon-filmleri/"          to "Aksiyon",
         "${mainUrl}/tur/animasyon-filmleri/"        to "Animasyon",
@@ -63,9 +65,12 @@ class `4KFilmIzlesene` : MainAPI() {
     )
 
     override suspend fun getMainPage(page: Int, request: MainPageRequest): HomePageResponse {
-        val document = app.get("${request.data}/page/${page}").document
+        val document = app.get("${request.data}page/${page}").document
+        if (request.name == "Trend Filmler"){
+            val home = document.select("div.content-inside div").mapNotNull { it.toMainPageResult() }
+            return newHomePageResponse(request.name, home)
+        }
         val home = document.select("div.film-box").mapNotNull { it.toMainPageResult() }
-
         return newHomePageResponse(request.name, home)
     }
 
