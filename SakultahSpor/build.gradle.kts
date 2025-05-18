@@ -3,7 +3,7 @@ version = 5
 cloudstream {
     authors     = listOf("Sakultah")
     language    = "tr"
-    description = "TRGoals"
+    description = "SakultahSpor"
 
     /**
      * Status int as the following:

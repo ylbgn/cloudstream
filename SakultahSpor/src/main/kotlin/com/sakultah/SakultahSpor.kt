@@ -6,9 +6,9 @@ import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import java.io.InputStream
 
-class CanliTV : MainAPI() {
-    override var mainUrl              = "https://sakultah.org/selcuksports/index.php"
-    override var name                 = "Selcuksports"
+class SakultahSpor : MainAPI() {
+    override var mainUrl              = "https://raw.githubusercontent.com/Sakubaba00/saku/refs/heads/main/playlist2.m3u"
+    override var name                 = "SakultahSpor"
     override val hasMainPage          = true
     override var lang                 = "tr"
     override val hasQuickSearch       = true
