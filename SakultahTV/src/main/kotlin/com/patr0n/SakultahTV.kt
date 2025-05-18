@@ -9,9 +9,9 @@ import com.lagradost.cloudstream3.utils.AppUtils.parseJson
 import com.lagradost.cloudstream3.utils.AppUtils.toJson
 import java.io.InputStream
 
-class DragonTV : MainAPI() {
-    override var mainUrl              = "https://raw.githubusercontent.com/patr0nq/link/refs/heads/main/dragon.m3u"
-    override var name                 = "DragonTV"
+class SakultahTV : MainAPI() {
+    override var mainUrl              = "https://raw.githubusercontent.com/patr0nq/link/refs/heads/main/sakultah.m3u"
+    override var name                 = "SakultahTV"
     override val hasMainPage          = true
     override var lang                 = "tr"
     override val hasQuickSearch       = true
