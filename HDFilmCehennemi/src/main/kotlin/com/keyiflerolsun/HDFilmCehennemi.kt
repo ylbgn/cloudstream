@@ -211,7 +211,7 @@ class HDFilmCehennemi : MainAPI() {
             .find { it.data().contains("sources:") }?.data() ?: return
         val videoData = getAndUnpack(script).substringAfter("file_link=\"").substringBefore("\";")
         val subData = script.substringAfter("tracks: [").substringBefore("]")
-
+        Log.d("HDFC", subData)
         callback.invoke(
             newExtractorLink(
                 source = source,
@@ -224,12 +224,15 @@ class HDFilmCehennemi : MainAPI() {
             }
         )
 
-        AppUtils.tryParseJson<List<SubSource>>("[${subData}]")?.filter { it.kind == "captions" }
-            ?.map {
-                subtitleCallback.invoke(
-                    SubtitleFile(it.label.toString(), fixUrl(it.file.toString()))
-                )
-            }
+        if (source.contains("Rapidrame")) {
+            AppUtils.tryParseJson<List<SubSource>>("[${subData}]")?.filter { it.kind == "captions" }
+                ?.map {
+                    subtitleCallback.invoke(
+                        SubtitleFile(it.label.toString(), fixUrl(it.file.toString()) + "/")
+                    )
+                }
+        }
+
     }
 
     override suspend fun loadLinks(
@@ -259,11 +262,28 @@ class HDFilmCehennemi : MainAPI() {
 
                 var iframe = Regex("""data-src=\\"([^"]+)""").find(apiGet)?.groupValues?.get(1)!!
                     .replace("\\", "")
+
+                if (iframe.contains("hdfilmcehennemi.mobi")) {
+                    val doc = app.get(iframe, referer = mainUrl).document
+                    doc.select("track").forEach { it ->
+                        val dil = it.attr("srclang").let {
+                            when (it) {
+                                "tr" -> "Türkçe Altyazı"
+                                "en" -> "İngilizce Altyazı"
+                                else -> it
+                            }
+                        }
+                        subtitleCallback.invoke(
+                            SubtitleFile(dil, "https://www.hdfilmcehennemi.mobi" + it.attr("src"))
+                        )
+                    }
+                }
                 if (iframe.contains("?rapidrame_id=")) {
                     iframe = "${mainUrl}/playerr/" + iframe.substringAfter("?rapidrame_id=")
                 }
 
                 Log.d("HDCH", "$source » $videoID » $iframe")
+
                 invokeLocalSource(source, iframe, subtitleCallback, callback)
             }
         }
