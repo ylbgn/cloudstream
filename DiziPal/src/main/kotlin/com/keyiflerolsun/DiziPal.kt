@@ -27,6 +27,10 @@ class DiziPal : MainAPI() {
     override var sequentialMainPageDelay       = 50L  // ? 0.05 saniye
     override var sequentialMainPageScrollDelay = 50L  // ? 0.05 saniye
 
+
+    private val cloudflareKiller by lazy { CloudflareKiller() }
+    private val interceptor      by lazy { CloudflareInterceptor(cloudflareKiller) }
+
     class CloudflareInterceptor(private val cloudflareKiller: CloudflareKiller): Interceptor {
                 override fun intercept(chain: Interceptor.Chain): Response {
                             val request  = chain.request()
