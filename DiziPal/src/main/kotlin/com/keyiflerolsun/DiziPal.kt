@@ -8,6 +8,11 @@ import com.lagradost.cloudstream3.*
 import com.lagradost.cloudstream3.utils.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.lagradost.cloudstream3.network.CloudflareKiller
+import com.lagradost.cloudstream3.utils.StringUtils.decodeUri
+import okhttp3.Interceptor
+import okhttp3.Response
+import org.jsoup.Jsoup
 
 class DiziPal : MainAPI() {
     override var mainUrl              = "https://dizipal952.com"
