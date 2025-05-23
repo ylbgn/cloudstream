@@ -27,23 +27,21 @@ class DiziPal : MainAPI() {
     override var sequentialMainPageDelay       = 50L  // ? 0.05 saniye
     override var sequentialMainPageScrollDelay = 50L  // ? 0.05 saniye
 
-    // ! CloudFlare v2
-    private val cloudflareKiller by lazy { CloudflareKiller() }
-    private val interceptor      by lazy { CloudflareInterceptor(cloudflareKiller) }
-
     class CloudflareInterceptor(private val cloudflareKiller: CloudflareKiller): Interceptor {
-        override fun intercept(chain: Interceptor.Chain): Response {
-            val request  = chain.request()
-            val response = chain.proceed(request)
-            val doc      = Jsoup.parse(response.peekBody(1024 * 1024).string())
+                override fun intercept(chain: Interceptor.Chain): Response {
+                            val request  = chain.request()
+                                        val response = chain.proceed(request)
+                                                    val doc      = Jsoup.parse(response.peekBody(1024 * 1024).string())
 
-            if (doc.text().contains("olduğunuz doğrulanıyor)) {
-                return cloudflareKiller.intercept(chain)
-            }
+                                                                if (doc.text().contains("Güvenlik taramasından geçiriliyorsunuz. Lütfen bekleyiniz..")) {
+                                                                                return cloudflareKiller.intercept(chain)
+                                                                                            }
 
-            return response
-        }
+                                                                                                        return response
+                                                                                                                }
+                                                                                                                    }
     }
+
     override val mainPage = mainPageOf(
         "${mainUrl}/diziler/son-bolumler"                          to "Son Bölümler",
         "${mainUrl}/diziler"                                       to "Yeni Diziler",
