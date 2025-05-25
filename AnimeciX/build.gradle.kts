@@ -1,7 +1,7 @@
 version = 9
 
 cloudstream {
-    authors     = listOf("keyiflerolsun", "inatchii", "JustRelaxable", "nikyokki")
+    authors     = listOf("keyiflerolsun", "inatchii", "ylbgn", "JustRelaxable", "nikyokki")
     language    = "tr"
     description = "AnimeciX, animeleri keşfedebileceğiniz ve animeler hakkında her şeyi öğrenebileceğiniz bir paylaşım platformudur."
 
